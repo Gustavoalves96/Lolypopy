@@ -8,6 +8,7 @@ import { Pendencias } from './components/Pendencias.jsx'
 import { MiniCalendar } from './components/MiniCalendar.jsx'
 import { RecentActivity } from './components/RecentActivity.jsx'
 import { CardShell } from './components/CardShell.jsx'
+import Estoque from './components/Estoque.jsx'
 
 const sidebarSections = [
 	{
@@ -15,6 +16,7 @@ const sidebarSections = [
 		items: [
 			{ icon: '📅', label: 'Reservas' },
 			{ icon: '👪', label: 'Clientes' },
+			{ icon: '📦', label: 'Estoque' },
 			{ icon: '🍰', label: 'Buffets' },
 		],
 	},
@@ -146,6 +148,7 @@ const screenMeta = {
 	'Tela inicial': { title: 'Bem vinda, Sinéia 👋', subtitle: 'Segunda-feira, 18 de maio de 2026', ctaLabel: 'Nova reserva', ctaTarget: 'Reservas' },
 	Reservas: { title: 'Reservas', subtitle: 'Agenda, confirmações e próximos eventos', ctaLabel: 'Nova reserva', ctaTarget: 'Reservas' },
 	Clientes: { title: 'Clientes', subtitle: 'Cadastro, histórico e contato dos responsáveis', ctaLabel: 'Novo cliente', ctaTarget: 'Clientes' },
+	Estoque: { title: 'Estoque', subtitle: 'Produtos, quantidades mínimas e movimentações', ctaLabel: 'Novo produto', ctaTarget: 'Estoque' },
 	Financeiro: { title: 'Financeiro', subtitle: 'Recebimentos, faturamento e acompanhamento de caixa', ctaLabel: 'Nova cobrança', ctaTarget: 'Financeiro' },
 	Pendências: { title: 'Pendências', subtitle: 'Itens atrasados e contratos aguardando ação', ctaLabel: 'Enviar lembrete', ctaTarget: 'Pendências' },
 	Contratos: { title: 'Contratos', subtitle: 'Documentos e assinaturas em andamento', ctaLabel: 'Novo contrato', ctaTarget: 'Contratos' },
@@ -156,6 +159,7 @@ const screenMeta = {
 
 function App() {
 	const [activeView, setActiveView] = useState('Tela inicial')
+	const [estoqueNovoProdutoKey, setEstoqueNovoProdutoKey] = useState(0)
 	const meta = screenMeta[activeView] ?? screenMeta['Tela inicial']
 	const activeSections = sidebarSections.map((section) => ({
 		...section,
@@ -163,13 +167,21 @@ function App() {
 	}))
 
 	const goTo = (view) => setActiveView(view)
+	const handleCtaClick = () => {
+		if (activeView === 'Estoque') {
+			setEstoqueNovoProdutoKey((value) => value + 1)
+			return
+		}
+
+		goTo(meta.ctaTarget)
+	}
 
 	return (
 		<div className="flex min-h-screen flex-col bg-[linear-gradient(180deg,#FFF8FB_0%,#FFFDFE_100%)] text-[#2D1B4E] lg:flex-row">
 			<Sidebar sections={activeSections} activeItem={activeView} onSelect={goTo} />
 
 			<main className="flex min-w-0 flex-1 flex-col">
-				<Topbar title={meta.title} subtitle={meta.subtitle} ctaLabel={meta.ctaLabel} onCtaClick={() => goTo(meta.ctaTarget)} />
+				<Topbar title={meta.title} subtitle={meta.subtitle} ctaLabel={meta.ctaLabel} onCtaClick={handleCtaClick} />
 
 				<div className="flex-1 overflow-y-auto px-5 py-6 lg:px-7">
 					{activeView === 'Tela inicial' ? (
@@ -183,6 +195,8 @@ function App() {
 							calendarLegend={calendarLegend}
 							activities={activities}
 						/>
+					) : activeView === 'Estoque' ? (
+						<Estoque openNewProductKey={estoqueNovoProdutoKey} />
 					) : (
 						<SectionScreen view={activeView} onBack={() => goTo('Tela inicial')} onOpen={goTo} />
 					)}
@@ -221,6 +235,11 @@ function SectionScreen({ view, onBack, onOpen }) {
 			items: ['Reserva da Sofia · 22/05 · Confirmada', 'Reserva do Lucas · 25/05 · Pagamento pendente', 'Reserva da Isabela · 31/05 · Em análise'],
 			actions: [{ label: 'Ver calendário', next: 'Tela inicial' }, { label: 'Abrir financeiro', next: 'Financeiro' }],
 		},
+		Estoque: {
+			summary: 'Gerencie produtos, alertas de reposição e movimentações do inventário.',
+			items: ['Coxinha · estoque crítico', 'Brigadeiro · reposição em andamento', 'Refrigerante 2L · nível baixo'],
+			actions: [{ label: 'Abrir estoque', next: 'Estoque' }, { label: 'Ir para buffets', next: 'Buffets' }],
+		},
 		Clientes: {
 			summary: 'Cadastro de responsáveis, aniversariantes e histórico de atendimento.',
 			items: ['Maria Souza · cliente ativa', 'João Lima · 2 reservas em aberto', 'Carla Melo · contrato aguardando assinatura'],
@@ -244,7 +263,7 @@ function SectionScreen({ view, onBack, onOpen }) {
 		Buffets: {
 			summary: 'Gerencie pacotes, temas e serviços adicionais disponíveis.',
 			items: ['Buffet Kids · disponível', 'Buffet Premium · limitado', 'Buffet Standard · agenda aberta'],
-			actions: [{ label: 'Ver reservas', next: 'Reservas' }, { label: 'Voltar à tela inicial', next: 'Tela inicial' }],
+			actions: [{ label: 'Ver estoque', next: 'Estoque' }, { label: 'Ver reservas', next: 'Reservas' }, { label: 'Voltar à tela inicial', next: 'Tela inicial' }],
 		},
 		Relatórios: {
 			summary: 'Resumo consolidado de reservas, receita e adimplência.',
@@ -300,6 +319,7 @@ function screenIcon(view) {
 		Contratos: '📄',
 		Buffets: '🍰',
 		Relatórios: '📊',
+		Estoque: '📦',
 		'Configurações': '⚙️',
 	}
 
