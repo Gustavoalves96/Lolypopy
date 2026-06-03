@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { CardShell } from './CardShell.jsx'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+import { apiFetch } from '../api.js'
 
 const MESES = [
   'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
@@ -23,7 +22,7 @@ export function MiniCalendar() {
   useEffect(() => {
     async function carregar() {
       try {
-        const res = await fetch(`${API_URL}/eventos?mes=${mes}&ano=${ANO}`)
+        const res = await apiFetch(`/eventos?mes=${mes}&ano=${ANO}`)
         if (res.ok) setEventos(await res.json())
         else setEventos([])
       } catch {

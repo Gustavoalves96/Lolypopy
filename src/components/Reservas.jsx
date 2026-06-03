@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { CardShell } from './CardShell.jsx'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+import { apiFetch } from '../api.js'
 
 const STATUS_CONFIG = {
   pendente:   { label: 'Pendente',   className: 'bg-[#FFF5D6] text-[#A07800]' },
@@ -73,8 +72,8 @@ export default function Reservas({ onNovaReserva }) {
     try {
       setCarregando(true)
       const [rEv, rCl] = await Promise.all([
-        fetch(`${API_URL}/eventos?mes=${mes}&ano=${ano}`),
-        fetch(`${API_URL}/clientes`),
+        apiFetch(`/eventos?mes=${mes}&ano=${ano}`),
+        apiFetch(`/clientes`),
       ])
       setEventos(rEv.ok ? await rEv.json() : [])
       setClientes(rCl.ok ? await rCl.json() : [])
@@ -125,11 +124,9 @@ export default function Reservas({ onNovaReserva }) {
         valorTotal: form.valorTotal ? Number(form.valorTotal) : 0,
         valorPago: form.valorPago ? Number(form.valorPago) : 0,
       }
-      const url = eventoSelecionado
-        ? `${API_URL}/eventos/${eventoSelecionado.id}`
-        : `${API_URL}/eventos`
+      const url = eventoSelecionado ? `/eventos/${eventoSelecionado.id}` : `/eventos`
       const method = eventoSelecionado ? 'PATCH' : 'POST'
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -146,7 +143,7 @@ export default function Reservas({ onNovaReserva }) {
 
   async function deletar(id) {
     try {
-      await fetch(`${API_URL}/eventos/${id}`, { method: 'DELETE' })
+      await apiFetch(`/eventos/${id}`, { method: 'DELETE' })
       await carregar()
       setConfirmandoDeletar(null)
     } catch {

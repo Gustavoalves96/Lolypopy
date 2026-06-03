@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+import { apiFetch } from '../api.js'
 
 const CATEGORIAS = [
   { value: "salgado", label: "🥟 Salgados", cor: "#f59e0b" },
@@ -218,8 +217,8 @@ export default function Estoque({ openNewProductKey = 0 }) {
     try {
       setCarregando(true);
       const [rProd, rAlert] = await Promise.all([
-        fetch(`${API_URL}/estoque/produtos`),
-        fetch(`${API_URL}/estoque/alertas`),
+        apiFetch(`/estoque/produtos`),
+        apiFetch(`/estoque/alertas`),
       ]);
       if (!rProd.ok) throw new Error("Falha");
       setProdutos(await rProd.json());
@@ -279,7 +278,7 @@ export default function Estoque({ openNewProductKey = 0 }) {
       return;
     }
     try {
-      const res = await fetch(`${API_URL}/estoque/produtos`, {
+      const res = await apiFetch(`/estoque/produtos`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -321,8 +320,8 @@ export default function Estoque({ openNewProductKey = 0 }) {
       return;
     }
     try {
-      const res = await fetch(
-        `${API_URL}/estoque/produtos/${modalMovimentacao.id}/movimentacao`,
+      const res = await apiFetch(
+        `/estoque/produtos/${modalMovimentacao.id}/movimentacao`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -355,8 +354,8 @@ export default function Estoque({ openNewProductKey = 0 }) {
       return;
     }
     try {
-      const res = await fetch(
-        `${API_URL}/estoque/produtos/${produto.id}/movimentacoes`
+      const res = await apiFetch(
+        `/estoque/produtos/${produto.id}/movimentacoes`
       );
       setHistorico(await res.json());
     } catch {

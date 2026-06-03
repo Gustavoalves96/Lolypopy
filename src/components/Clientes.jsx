@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { CardShell } from './CardShell.jsx'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+import { apiFetch } from '../api.js'
 
 function Modal({ titulo, onClose, children }) {
   return (
@@ -53,7 +52,7 @@ export default function Clientes({ onNovoCliente }) {
   async function carregar() {
     try {
       setCarregando(true)
-      const res = await fetch(`${API_URL}/clientes${busca ? `?busca=${busca}` : ''}`)
+      const res = await apiFetch(`/clientes${busca ? `?busca=${busca}` : ''}`)
       if (!res.ok) throw new Error()
       setClientes(await res.json())
     } catch {
@@ -96,11 +95,9 @@ export default function Clientes({ onNovoCliente }) {
     if (!form.nome.trim() || !form.telefone.trim()) return
     setSalvando(true)
     try {
-      const url = clienteSelecionado
-        ? `${API_URL}/clientes/${clienteSelecionado.id}`
-        : `${API_URL}/clientes`
+      const url = clienteSelecionado ? `/clientes/${clienteSelecionado.id}` : `/clientes`
       const method = clienteSelecionado ? 'PATCH' : 'POST'
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -117,7 +114,7 @@ export default function Clientes({ onNovoCliente }) {
 
   async function deletar(id) {
     try {
-      await fetch(`${API_URL}/clientes/${id}`, { method: 'DELETE' })
+      await apiFetch(`/clientes/${id}`, { method: 'DELETE' })
       await carregar()
       setConfirmandoDeletar(null)
     } catch {

@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import Login from './components/Login.jsx'
+import { isLogged } from './api.js'
 
 import { Sidebar } from './components/Sidebar.jsx'
 import { Topbar } from './components/Topbar.jsx'
@@ -109,6 +111,7 @@ const screenMeta = {
 
 function App() {
 	const [activeView, setActiveView] = useState('Tela inicial')
+	const [authenticated, setAuthenticated] = useState(isLogged())
 	const [ctaKey, setCtaKey] = useState(0)
 	const meta = screenMeta[activeView] ?? screenMeta['Tela inicial']
 
@@ -125,6 +128,10 @@ function App() {
 			return
 		}
 		goTo(meta.ctaTarget)
+	}
+
+	if (!authenticated) {
+		return <Login onSuccess={() => setAuthenticated(true)} />
 	}
 
 	return (
