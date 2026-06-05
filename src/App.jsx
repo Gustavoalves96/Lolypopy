@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import Login from './components/Login.jsx'
 import { isLogged } from './api.js'
-
 import { Sidebar } from './components/Sidebar.jsx'
 import { Topbar } from './components/Topbar.jsx'
 import { KpiCard } from './components/KpiCard.jsx'
@@ -13,6 +12,7 @@ import { CardShell } from './components/CardShell.jsx'
 import Estoque from './components/Estoque.jsx'
 import Clientes from './components/Clientes.jsx'
 import Reservas from './components/Reservas.jsx'
+import Contratos from './components/Contratos.jsx'
 
 const sidebarSections = [
 	{
@@ -104,7 +104,7 @@ const screenMeta = {
 	Estoque:        { title: 'Estoque', subtitle: 'Produtos, quantidades mínimas e movimentações', ctaLabel: 'Novo produto', ctaTarget: 'Estoque' },
 	Financeiro:     { title: 'Financeiro', subtitle: 'Recebimentos, faturamento e caixa', ctaLabel: 'Nova cobrança', ctaTarget: 'Financeiro' },
 	Pendências:     { title: 'Pendências', subtitle: 'Itens atrasados e contratos aguardando ação', ctaLabel: 'Enviar lembrete', ctaTarget: 'Pendências' },
-	Contratos:      { title: 'Contratos', subtitle: 'Documentos e assinaturas em andamento', ctaLabel: 'Novo contrato', ctaTarget: 'Contratos' },
+	Contratos: { title: 'Contratos', subtitle: '...', ctaLabel: 'Novo contrato', ctaTarget: 'Contratos' },
 	Buffets:        { title: 'Buffets', subtitle: 'Pacotes, serviços e disponibilidade de menu', ctaLabel: 'Novo buffet', ctaTarget: 'Buffets' },
 	Relatórios:     { title: 'Relatórios', subtitle: 'Indicadores consolidados da operação', ctaLabel: 'Exportar PDF', ctaTarget: 'Relatórios' },
 }
@@ -159,6 +159,8 @@ function App() {
 						<Clientes onNovoCliente={ctaKey} />
 					) : activeView === 'Reservas' ? (
 						<Reservas onNovaReserva={ctaKey} />
+					) : activeView === 'Contratos' ? (
+    					<Contratos onNovoContrato={ctaKey} />
 					) : (
 						<SectionScreen view={activeView} onBack={() => goTo('Tela inicial')} onOpen={goTo} />
 					)}
