@@ -123,7 +123,7 @@ function App() {
 	const goTo = (view) => setActiveView(view)
 
 	const handleCtaClick = () => {
-		if (['Estoque', 'Clientes', 'Reservas'].includes(activeView)) {
+		if (['Estoque', 'Clientes', 'Reservas', 'Contratos'].includes(activeView)) {
 			setCtaKey((k) => k + 1)
 			return
 		}

@@ -12,7 +12,7 @@ export function Sidebar({ sections, activeItem = 'Tela inicial', onSelect }) {
             className="text-[18px] font-extrabold leading-none"
             style={{ fontFamily: '"Baloo 2", cursive' }}
           >
-            Loly Popy
+            Loly Pop
           </div>
           <div className="text-xs text-white/45">Gestão de festas</div>
         </div>

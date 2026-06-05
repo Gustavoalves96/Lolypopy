@@ -2,8 +2,6 @@ import { useState, useEffect, useRef } from 'react'
 import { CardShell } from './CardShell.jsx'
 import { apiFetch } from '../api.js'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
-
 const STATUS_CONFIG = {
   pendente:  { label: 'Pendente',  className: 'bg-[#FFF5D6] text-[#A07800]' },
   assinado:  { label: 'Assinado',  className: 'bg-[#D7FBF3] text-[#0B7A5E]' },
@@ -57,8 +55,8 @@ export default function Contratos({ onNovoContrato }) {
     try {
       setCarregando(true)
       const [rCont, rCli] = await Promise.all([
-        apiFetch(`${API_URL}/contratos`),
-        apiFetch(`${API_URL}/clientes`),
+        apiFetch(`/contratos`),
+        apiFetch(`/clientes`),
       ])
       setContratos(rCont.ok ? await rCont.json() : [])
       setClientes(rCli.ok ? await rCli.json() : [])
@@ -92,21 +90,18 @@ export default function Contratos({ onNovoContrato }) {
   }
 
   async function salvar() {
-    if (!form.data || !form.valor) return
+    if (!form.clienteId || !form.data || !form.valor) return
     setSalvando(true)
     setProgresso(0)
     try {
-      // 1. Cria ou atualiza o contrato
       const payload = {
         ...form,
-        clienteId: form.clienteId ? Number(form.clienteId) : undefined,
+        clienteId: Number(form.clienteId),
         valor: Number(form.valor),
       }
-      const url = contratoSelecionado
-        ? `${API_URL}/contratos/${contratoSelecionado.id}`
-        : `${API_URL}/contratos`
+      const url = contratoSelecionado ? `/contratos/${contratoSelecionado.id}` : `/contratos`
       const method = contratoSelecionado ? 'PATCH' : 'POST'
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -114,12 +109,11 @@ export default function Contratos({ onNovoContrato }) {
       if (!res.ok) throw new Error()
       const contratoSalvo = await res.json()
 
-      // 2. Se tiver PDF selecionado, faz upload
       if (arquivoSelecionado) {
         const intervalo = setInterval(() => setProgresso(p => p < 85 ? p + 15 : p), 200)
         const formData = new FormData()
         formData.append('arquivo', arquivoSelecionado)
-        const resUpload = await fetch(`${API_URL}/contratos/${contratoSalvo.id}/upload`, {
+        const resUpload = await apiFetch(`/contratos/${contratoSalvo.id}/upload`, {
           method: 'POST',
           body: formData,
         })
@@ -139,30 +133,41 @@ export default function Contratos({ onNovoContrato }) {
 
   async function deletar(id) {
     try {
-      await fetch(`${API_URL}/contratos/${id}`, { method: 'DELETE' })
+      await apiFetch(`/contratos/${id}`, { method: 'DELETE' })
       await carregar()
       setConfirmandoDeletar(null)
     } catch { alert('Erro ao remover contrato.') }
   }
 
-  const totalValor = contratos.reduce((acc, c) => acc + Number(c.valor || 0), 0)
+  // Cálculos separados por status
+  const valorAssinados = contratos
+    .filter(c => c.status === 'assinado')
+    .reduce((acc, c) => acc + Number(c.valor || 0), 0)
+
+  const valorPendentes = contratos
+    .filter(c => c.status === 'pendente')
+    .reduce((acc, c) => acc + Number(c.valor || 0), 0)
+
   const totalAssinados = contratos.filter(c => c.status === 'assinado').length
+
+  const podeSalvar = form.clienteId && form.data && form.valor && !salvando
 
   return (
     <div className="mx-auto flex w-full max-w-300 flex-col gap-5">
 
       {/* CARDS RESUMO */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[
           { label: 'Total de contratos', valor: contratos.length, icon: '📄', cor: '#6366f1' },
           { label: 'Assinados', valor: totalAssinados, icon: '✅', cor: '#059669' },
-          { label: 'Valor total', valor: `R$ ${totalValor.toFixed(2).replace('.', ',')}`, icon: '💰', cor: '#f59e0b' },
+          { label: 'Valor assinados', valor: `R$ ${valorAssinados.toFixed(2).replace('.', ',')}`, icon: '💰', cor: '#059669' },
+          { label: 'Valor pendente', valor: `R$ ${valorPendentes.toFixed(2).replace('.', ',')}`, icon: '⏳', cor: '#f59e0b' },
         ].map(card => (
           <div key={card.label} className="flex items-center gap-3 rounded-[20px] border border-[#F0E6F6] bg-white p-4 shadow-sm">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-2xl" style={{ background: card.cor + '18' }}>{card.icon}</div>
             <div>
-              <div className="text-[22px] font-extrabold" style={{ color: card.cor }}>{card.valor}</div>
-              <div className="text-[12px] text-[#8B7BAD]">{card.label}</div>
+              <div className="text-[20px] font-extrabold leading-tight" style={{ color: card.cor }}>{card.valor}</div>
+              <div className="text-[11px] text-[#8B7BAD]">{card.label}</div>
             </div>
           </div>
         ))}
@@ -204,14 +209,8 @@ export default function Contratos({ onNovoContrato }) {
                     </div>
                   </div>
                   <div className="flex shrink-0 flex-col gap-1.5">
-                    <button onClick={() => abrirEditar(contrato)}
-                      className="rounded-xl border border-[#F0E6F6] bg-white px-3 py-1.5 text-xs font-bold text-[#9B5DE5] transition hover:bg-[#EEE4FF]">
-                      Editar
-                    </button>
-                    <button onClick={() => setConfirmandoDeletar(contrato)}
-                      className="rounded-xl border border-[#FFE8F1] bg-white px-3 py-1.5 text-xs font-bold text-[#C9365A] transition hover:bg-[#FFE8F1]">
-                      Remover
-                    </button>
+                    <button onClick={() => abrirEditar(contrato)} className="rounded-xl border border-[#F0E6F6] bg-white px-3 py-1.5 text-xs font-bold text-[#9B5DE5] transition hover:bg-[#EEE4FF]">Editar</button>
+                    <button onClick={() => setConfirmandoDeletar(contrato)} className="rounded-xl border border-[#FFE8F1] bg-white px-3 py-1.5 text-xs font-bold text-[#C9365A] transition hover:bg-[#FFE8F1]">Remover</button>
                   </div>
                 </div>
               )
@@ -225,15 +224,22 @@ export default function Contratos({ onNovoContrato }) {
         <Modal titulo={contratoSelecionado ? 'Editar Contrato' : 'Novo Contrato'} onClose={() => setModalAberto(false)}>
           <div className="grid grid-cols-2 gap-x-4">
             <div className="col-span-2">
-              <Campo label="Cliente">
-                <select className={inputClass} value={form.clienteId} onChange={e => setForm(f => ({ ...f, clienteId: e.target.value }))}>
-                  <option value="">— Selecionar cliente —</option>
+              <Campo label="Cliente *">
+                <select
+                  className={`${inputClass} ${!form.clienteId ? 'border-[#f59e0b]' : ''}`}
+                  value={form.clienteId}
+                  onChange={e => setForm(f => ({ ...f, clienteId: e.target.value }))}
+                >
+                  <option value="">— Selecionar cliente (obrigatório) —</option>
                   {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
                 </select>
+                {!form.clienteId && (
+                  <p className="mt-1 text-[11px] text-[#f59e0b] font-semibold">⚠ Selecione um cliente para continuar</p>
+                )}
               </Campo>
             </div>
             <Campo label="Data *">
-              <input className={inputClass} type="date" value={form.data} onChange={e => setForm(f => ({ ...f, data: e.target.value }))} autoFocus />
+              <input className={inputClass} type="date" value={form.data} onChange={e => setForm(f => ({ ...f, data: e.target.value }))} />
             </Campo>
             <Campo label="Valor (R$) *">
               <input className={inputClass} type="number" min="0" step="0.01" value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))} placeholder="0,00" />
@@ -256,10 +262,8 @@ export default function Contratos({ onNovoContrato }) {
             <div className="col-span-2">
               <Campo label="Arquivo PDF (opcional)">
                 {!arquivoSelecionado ? (
-                  <div
-                    onClick={() => inputRef.current?.click()}
-                    className="cursor-pointer rounded-2xl border-2 border-dashed border-[#D8C8F0] bg-[#FFF8FB] py-6 text-center transition hover:border-[#9B5DE5] hover:bg-[#F7EEF9]"
-                  >
+                  <div onClick={() => inputRef.current?.click()}
+                    className="cursor-pointer rounded-2xl border-2 border-dashed border-[#D8C8F0] bg-[#FFF8FB] py-6 text-center transition hover:border-[#9B5DE5] hover:bg-[#F7EEF9]">
                     <div className="text-3xl">📎</div>
                     <div className="mt-2 text-sm font-semibold text-[#2D1B4E]">Clique para anexar o PDF</div>
                     <div className="mt-0.5 text-[11px] text-[#8B7BAD]">Apenas PDF · Máximo 10MB</div>
@@ -279,7 +283,6 @@ export default function Contratos({ onNovoContrato }) {
                   </div>
                 )}
 
-                {/* Barra de progresso do upload */}
                 {salvando && arquivoSelecionado && progresso > 0 && (
                   <div className="mt-2">
                     <div className="h-1.5 overflow-hidden rounded-full bg-[#e5e7eb]">
@@ -291,12 +294,10 @@ export default function Contratos({ onNovoContrato }) {
                   </div>
                 )}
 
-                {/* PDF já existente ao editar */}
                 {contratoSelecionado?.arquivoUrl && !arquivoSelecionado && (
                   <div className="mt-2 flex items-center gap-2 text-[12px] text-[#8B7BAD]">
                     <span>PDF atual:</span>
-                    <a href={contratoSelecionado.arquivoUrl} target="_blank" rel="noreferrer"
-                      className="font-semibold text-[#9B5DE5] hover:underline">Ver PDF atual</a>
+                    <a href={contratoSelecionado.arquivoUrl} target="_blank" rel="noreferrer" className="font-semibold text-[#9B5DE5] hover:underline">Ver PDF atual</a>
                     <span>· selecione um novo para substituir</span>
                   </div>
                 )}
@@ -305,12 +306,10 @@ export default function Contratos({ onNovoContrato }) {
           </div>
 
           <div className="mt-2 flex gap-3">
-            <button onClick={() => setModalAberto(false)}
-              className="flex-1 rounded-2xl border border-[#F0E6F6] py-2.5 text-sm font-bold text-[#8B7BAD] transition hover:bg-[#FFF8FB]">
-              Cancelar
-            </button>
-            <button onClick={salvar} disabled={!form.data || !form.valor || salvando}
-              className="flex-2 rounded-2xl bg-[#9B5DE5] py-2.5 text-sm font-bold text-white shadow-lg shadow-[#9B5DE5]/20 transition hover:bg-[#864fe1] disabled:opacity-50">
+            <button onClick={() => setModalAberto(false)} className="flex-1 rounded-2xl border border-[#F0E6F6] py-2.5 text-sm font-bold text-[#8B7BAD] transition hover:bg-[#FFF8FB]">Cancelar</button>
+            <button onClick={salvar} disabled={!podeSalvar}
+              className="flex-2 rounded-2xl py-2.5 text-sm font-bold text-white shadow-lg transition disabled:cursor-not-allowed disabled:opacity-40"
+              style={{ background: podeSalvar ? 'linear-gradient(135deg,#f472b6,#9B5DE5)' : '#e5e7eb', color: podeSalvar ? '#fff' : '#9ca3af' }}>
               {salvando ? (arquivoSelecionado && progresso > 0 ? 'Enviando PDF...' : 'Salvando...') : contratoSelecionado ? 'Salvar alterações' : 'Criar contrato'}
             </button>
           </div>
@@ -326,14 +325,8 @@ export default function Contratos({ onNovoContrato }) {
             {confirmandoDeletar.arquivoUrl && ' O PDF também será deletado.'}
           </p>
           <div className="mt-5 flex gap-3">
-            <button onClick={() => setConfirmandoDeletar(null)}
-              className="flex-1 rounded-2xl border border-[#F0E6F6] py-2.5 text-sm font-bold text-[#8B7BAD] transition hover:bg-[#FFF8FB]">
-              Cancelar
-            </button>
-            <button onClick={() => deletar(confirmandoDeletar.id)}
-              className="flex-[2] rounded-2xl bg-[#EF476F] py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-[#d63860]">
-              Sim, remover
-            </button>
+            <button onClick={() => setConfirmandoDeletar(null)} className="flex-1 rounded-2xl border border-[#F0E6F6] py-2.5 text-sm font-bold text-[#8B7BAD] transition hover:bg-[#FFF8FB]">Cancelar</button>
+            <button onClick={() => deletar(confirmandoDeletar.id)} className="flex-2 rounded-2xl bg-[#EF476F] py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-[#d63860]">Sim, remover</button>
           </div>
         </Modal>
       )}
