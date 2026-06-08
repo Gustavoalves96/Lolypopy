@@ -73,43 +73,6 @@ function StatusEstoque({ atual, minimo }) {
         {critico ? "⚠ Crítico" : baixo ? "↓ Baixo" : "✓ OK"}
       </div>
     </div>
-
-      {/* MODAL — CONFIRMAR EXCLUSÃO */}
-      {confirmandoExcluir && (
-        <Modal
-          titulo="Excluir produto"
-          onClose={() => setConfirmandoExcluir(null)}
-        >
-          <p style={{ fontSize: 14, color: "#6b7280", marginBottom: 8 }}>
-            Tem certeza que deseja excluir{" "}
-            <strong style={{ color: "#111" }}>{confirmandoExcluir.nome}</strong>?
-            Esta ação remove o produto e todo o seu histórico do banco de dados.
-          </p>
-          <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-            <button
-              onClick={() => setConfirmandoExcluir(null)}
-              style={{
-                flex: 1, padding: 10, border: "1.5px solid #e5e7eb",
-                borderRadius: 10, background: "#fff", cursor: "pointer",
-                fontWeight: 600, fontSize: 14,
-              }}
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={() => excluirProduto(confirmandoExcluir.id)}
-              style={{
-                flex: 2, padding: 10, border: "none",
-                borderRadius: 10, background: "#ef4444",
-                color: "#fff", cursor: "pointer",
-                fontWeight: 700, fontSize: 14,
-              }}
-            >
-              Sim, excluir
-            </button>
-          </div>
-        </Modal>
-      )}
   );
 }
 
@@ -167,43 +130,6 @@ function Modal({ titulo, onClose, children }) {
         <div style={{ padding: 24 }}>{children}</div>
       </div>
     </div>
-
-      {/* MODAL — CONFIRMAR EXCLUSÃO */}
-      {confirmandoExcluir && (
-        <Modal
-          titulo="Excluir produto"
-          onClose={() => setConfirmandoExcluir(null)}
-        >
-          <p style={{ fontSize: 14, color: "#6b7280", marginBottom: 8 }}>
-            Tem certeza que deseja excluir{" "}
-            <strong style={{ color: "#111" }}>{confirmandoExcluir.nome}</strong>?
-            Esta ação remove o produto e todo o seu histórico do banco de dados.
-          </p>
-          <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-            <button
-              onClick={() => setConfirmandoExcluir(null)}
-              style={{
-                flex: 1, padding: 10, border: "1.5px solid #e5e7eb",
-                borderRadius: 10, background: "#fff", cursor: "pointer",
-                fontWeight: 600, fontSize: 14,
-              }}
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={() => excluirProduto(confirmandoExcluir.id)}
-              style={{
-                flex: 2, padding: 10, border: "none",
-                borderRadius: 10, background: "#ef4444",
-                color: "#fff", cursor: "pointer",
-                fontWeight: 700, fontSize: 14,
-              }}
-            >
-              Sim, excluir
-            </button>
-          </div>
-        </Modal>
-      )}
   );
 }
 
@@ -223,43 +149,6 @@ function Campo({ label, children }) {
       </label>
       {children}
     </div>
-
-      {/* MODAL — CONFIRMAR EXCLUSÃO */}
-      {confirmandoExcluir && (
-        <Modal
-          titulo="Excluir produto"
-          onClose={() => setConfirmandoExcluir(null)}
-        >
-          <p style={{ fontSize: 14, color: "#6b7280", marginBottom: 8 }}>
-            Tem certeza que deseja excluir{" "}
-            <strong style={{ color: "#111" }}>{confirmandoExcluir.nome}</strong>?
-            Esta ação remove o produto e todo o seu histórico do banco de dados.
-          </p>
-          <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-            <button
-              onClick={() => setConfirmandoExcluir(null)}
-              style={{
-                flex: 1, padding: 10, border: "1.5px solid #e5e7eb",
-                borderRadius: 10, background: "#fff", cursor: "pointer",
-                fontWeight: 600, fontSize: 14,
-              }}
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={() => excluirProduto(confirmandoExcluir.id)}
-              style={{
-                flex: 2, padding: 10, border: "none",
-                borderRadius: 10, background: "#ef4444",
-                color: "#fff", cursor: "pointer",
-                fontWeight: 700, fontSize: 14,
-              }}
-            >
-              Sim, excluir
-            </button>
-          </div>
-        </Modal>
-      )}
   );
 }
 
@@ -1264,7 +1153,6 @@ export default function Estoque({ openNewProductKey = 0 }) {
           )}
         </Modal>
       )}
-    </div>
 
       {/* MODAL — CONFIRMAR EXCLUSÃO */}
       {confirmandoExcluir && (
@@ -1275,7 +1163,7 @@ export default function Estoque({ openNewProductKey = 0 }) {
           <p style={{ fontSize: 14, color: "#6b7280", marginBottom: 8 }}>
             Tem certeza que deseja excluir{" "}
             <strong style={{ color: "#111" }}>{confirmandoExcluir.nome}</strong>?
-            Esta ação remove o produto e todo o seu histórico do banco de dados.
+            Esta ação remove o produto permanentemente do banco de dados.
           </p>
           <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
             <button
@@ -1302,5 +1190,7 @@ export default function Estoque({ openNewProductKey = 0 }) {
           </div>
         </Modal>
       )}
+
+    </div>
   );
 }
