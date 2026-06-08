@@ -11,6 +11,8 @@ const STATUS_CONFIG = {
 
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 
+const fmt = (v) => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+
 function Modal({ titulo, onClose, children }) {
   return (
     <div
@@ -53,6 +55,72 @@ const FORM_VAZIO = {
   valorTotal: '',
   valorPago: '',
   observacoes: '',
+}
+
+// Preview financeiro inline no modal
+function PreviewFinanceiro({ valorTotal, valorPago }) {
+  const total = Number(valorTotal) || 0
+  const pago = Number(valorPago) || 0
+  const restante = total - pago
+  const pct = total > 0 ? Math.min(100, Math.round((pago / total) * 100)) : 0
+
+  if (total === 0) return null
+
+  return (
+    <div className="col-span-2 mb-4 rounded-2xl border border-[#F0E6F6] bg-[#FFF8FB] p-4">
+      <div className="mb-2 text-[12px] font-bold uppercase tracking-[0.1em] text-[#8B7BAD]">
+        Resumo financeiro da reserva
+      </div>
+
+      {/* Barra de progresso */}
+      <div className="mb-3 flex items-center gap-2">
+        <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#F0E6F6]">
+          <div
+            className={`h-full rounded-full transition-all ${pct === 100 ? 'bg-[#06D6A0]' : 'bg-[#9B5DE5]'}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <span className="text-[11px] font-bold text-[#8B7BAD]">{pct}%</span>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <div className="rounded-xl bg-white px-2 py-2 shadow-sm">
+          <div className="text-[11px] text-[#8B7BAD]">Total</div>
+          <div className="text-[13px] font-extrabold text-[#2D1B4E]" style={{ fontFamily: '"Baloo 2", cursive' }}>
+            {fmt(total)}
+          </div>
+        </div>
+        <div className="rounded-xl bg-[#D7FBF3] px-2 py-2">
+          <div className="text-[11px] text-[#0B7A5E]">Pago ✓</div>
+          <div className="text-[13px] font-extrabold text-[#0B7A5E]" style={{ fontFamily: '"Baloo 2", cursive' }}>
+            {fmt(pago)}
+          </div>
+        </div>
+        <div className={`rounded-xl px-2 py-2 ${restante > 0 ? 'bg-[#FFE8F1]' : 'bg-[#D7FBF3]'}`}>
+          <div className={`text-[11px] ${restante > 0 ? 'text-[#C9365A]' : 'text-[#0B7A5E]'}`}>
+            {restante > 0 ? 'Pendente ⚠️' : 'Quitado 🎉'}
+          </div>
+          <div
+            className={`text-[13px] font-extrabold ${restante > 0 ? 'text-[#C9365A]' : 'text-[#0B7A5E]'}`}
+            style={{ fontFamily: '"Baloo 2", cursive' }}
+          >
+            {fmt(restante > 0 ? restante : 0)}
+          </div>
+        </div>
+      </div>
+
+      {/* Aviso de integração */}
+      {total > 0 && (
+        <div className="mt-3 rounded-xl bg-[#EEE4FF] px-3 py-2 text-[11px] text-[#6B35C1]">
+          💡 {pago > 0 && restante > 0
+            ? `Será criado um lançamento de sinal (${fmt(pago)}) e uma pendência de ${fmt(restante)} no módulo Financeiro.`
+            : pago > 0 && restante <= 0
+            ? `Pagamento completo! Será criado um lançamento de ${fmt(total)} no módulo Financeiro.`
+            : `Quando informar o valor pago, será lançado automaticamente no Financeiro.`}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function Reservas({ onNovaReserva }) {
@@ -204,7 +272,11 @@ export default function Reservas({ onNovaReserva }) {
             {eventos.map((evento) => {
               const status = STATUS_CONFIG[evento.status] ?? STATUS_CONFIG.pendente
               const restante = valorRestante(evento)
+              const total = Number(evento.valorTotal) || 0
+              const pago = Number(evento.valorPago) || 0
+              const pct = total > 0 ? Math.min(100, Math.round((pago / total) * 100)) : 0
               const dataFormatada = new Date(evento.data + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })
+
               return (
                 <div key={evento.id} className="px-5 py-4 transition hover:bg-[#FFF8FB]">
                   <div className="flex items-start gap-4">
@@ -226,6 +298,16 @@ export default function Reservas({ onNovaReserva }) {
                         <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${status.className}`}>
                           {status.label}
                         </span>
+                        {restante > 0 && (
+                          <span className="rounded-full bg-[#FFE8F1] px-2.5 py-0.5 text-[11px] font-bold text-[#C9365A]">
+                            ⚠️ Pendente
+                          </span>
+                        )}
+                        {total > 0 && restante === 0 && (
+                          <span className="rounded-full bg-[#D7FBF3] px-2.5 py-0.5 text-[11px] font-bold text-[#0B7A5E]">
+                            ✓ Quitado
+                          </span>
+                        )}
                       </div>
 
                       <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[12px] text-[#8B7BAD]">
@@ -234,19 +316,31 @@ export default function Reservas({ onNovaReserva }) {
                         {evento.buffet && <span>🍰 {evento.buffet}</span>}
                       </div>
 
-                      {Number(evento.valorTotal) > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-3 text-[12px]">
-                          <span className="font-semibold text-[#2D1B4E]">
-                            Total: <strong>R$ {Number(evento.valorTotal).toFixed(2).replace('.', ',')}</strong>
-                          </span>
-                          <span className="font-semibold text-[#0B7A5E]">
-                            Pago: R$ {Number(evento.valorPago).toFixed(2).replace('.', ',')}
-                          </span>
-                          {restante > 0 && (
-                            <span className="font-semibold text-[#C9365A]">
-                              Restante: R$ {restante.toFixed(2).replace('.', ',')}
+                      {/* Valores + barra de progresso */}
+                      {total > 0 && (
+                        <div className="mt-2.5">
+                          <div className="flex items-center gap-2">
+                            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#F0E6F6]">
+                              <div
+                                className={`h-full rounded-full transition-all ${pct === 100 ? 'bg-[#06D6A0]' : 'bg-[#9B5DE5]'}`}
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                            <span className="text-[10px] font-bold text-[#8B7BAD]">{pct}%</span>
+                          </div>
+                          <div className="mt-1 flex flex-wrap gap-3 text-[12px]">
+                            <span className="font-semibold text-[#2D1B4E]">
+                              Total: <strong>{fmt(total)}</strong>
                             </span>
-                          )}
+                            <span className="font-semibold text-[#0B7A5E]">
+                              Pago: {fmt(pago)}
+                            </span>
+                            {restante > 0 && (
+                              <span className="font-semibold text-[#C9365A]">
+                                Restante: {fmt(restante)}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -323,11 +417,30 @@ export default function Reservas({ onNovaReserva }) {
             <div />
 
             <Campo label="Valor total (R$)">
-              <input className={inputClass} type="number" min="0" step="0.01" value={form.valorTotal} onChange={(e) => setForm(f => ({ ...f, valorTotal: e.target.value }))} placeholder="0,00" />
+              <input
+                className={inputClass}
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.valorTotal}
+                onChange={(e) => setForm(f => ({ ...f, valorTotal: e.target.value }))}
+                placeholder="0,00"
+              />
             </Campo>
             <Campo label="Valor pago (R$)">
-              <input className={inputClass} type="number" min="0" step="0.01" value={form.valorPago} onChange={(e) => setForm(f => ({ ...f, valorPago: e.target.value }))} placeholder="0,00" />
+              <input
+                className={inputClass}
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.valorPago}
+                onChange={(e) => setForm(f => ({ ...f, valorPago: e.target.value }))}
+                placeholder="0,00"
+              />
             </Campo>
+
+            {/* Preview financeiro em tempo real */}
+            <PreviewFinanceiro valorTotal={form.valorTotal} valorPago={form.valorPago} />
 
             <div className="col-span-2">
               <Campo label="Observações">
@@ -364,6 +477,9 @@ export default function Reservas({ onNovaReserva }) {
             </strong>
             {confirmandoDeletar.cliente && ` — ${confirmandoDeletar.cliente.nome}`}?
           </p>
+          <p className="mt-2 text-[12px] text-[#C9365A]">
+            ⚠️ Os lançamentos financeiros vinculados a esta reserva também serão removidos.
+          </p>
           <div className="mt-5 flex gap-3">
             <button
               onClick={() => setConfirmandoDeletar(null)}
@@ -373,7 +489,7 @@ export default function Reservas({ onNovaReserva }) {
             </button>
             <button
               onClick={() => deletar(confirmandoDeletar.id)}
-              className="flex-2 rounded-2xl bg-[#EF476F] py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-[#d63860]"
+              className="flex-[2] rounded-2xl bg-[#EF476F] py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-[#d63860]"
             >
               Sim, remover
             </button>
