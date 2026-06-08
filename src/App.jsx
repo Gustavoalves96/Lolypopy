@@ -14,7 +14,6 @@ import Clientes from './components/Clientes.jsx'
 import Reservas from './components/Reservas.jsx'
 import Contratos from './components/Contratos.jsx'
 import Financeiro from './components/Financeiro.jsx'
-import PendenciasPage from './components/PendenciasPage.jsx'
 
 const sidebarSections = [
 	{
@@ -30,7 +29,6 @@ const sidebarSections = [
 		title: 'Financeiro',
 		items: [
 			{ icon: '💰', label: 'Financeiro' },
-			{ icon: '⚠️', label: 'Pendências' },
 			{ icon: '📄', label: 'Contratos' },
 		],
 	},
@@ -46,18 +44,16 @@ const screenMeta = {
 	Clientes:       { title: 'Clientes', subtitle: 'Cadastro, histórico e contato dos responsáveis', ctaLabel: 'Novo cliente', ctaTarget: 'Clientes' },
 	Estoque:        { title: 'Estoque', subtitle: 'Produtos, quantidades mínimas e movimentações', ctaLabel: 'Novo produto', ctaTarget: 'Estoque' },
 	Financeiro:     { title: 'Financeiro', subtitle: 'Recebimentos, faturamento e caixa', ctaLabel: 'Novo lançamento', ctaTarget: 'Financeiro' },
-	Pendências:     { title: 'Pendências', subtitle: 'Itens atrasados e contratos aguardando ação', ctaLabel: 'Ver financeiro', ctaTarget: 'Financeiro' },
 	Contratos:      { title: 'Contratos', subtitle: 'Assinaturas, anexos e contratos em andamento', ctaLabel: 'Novo contrato', ctaTarget: 'Contratos' },
 	Buffets:        { title: 'Buffets', subtitle: 'Pacotes, serviços e disponibilidade de menu', ctaLabel: 'Novo buffet', ctaTarget: 'Buffets' },
 	Relatórios:     { title: 'Relatórios', subtitle: 'Indicadores consolidados da operação', ctaLabel: 'Exportar PDF', ctaTarget: 'Relatórios' },
 }
 
-// KPIs padrão enquanto carrega
 const KPI_SKELETON = [
-	{ tone: 'pink',   icon: '🎉', trend: { label: '...', variant: 'up'   }, value: '—', label: 'Festas este mês',     view: 'Reservas'    },
-	{ tone: 'purple', icon: '💵', trend: { label: '...', variant: 'up'   }, value: '—', label: 'Faturamento do mês',  view: 'Financeiro'  },
-	{ tone: 'teal',   icon: '✅', trend: { label: '...', variant: 'up'   }, value: '—', label: 'Taxa de adimplência', view: 'Financeiro'  },
-	{ tone: 'yellow', icon: '⚠️', trend: { label: '...', variant: 'down' }, value: '—', label: 'Pendências em aberto',view: 'Pendências'  },
+	{ tone: 'pink',   icon: '🎉', trend: { label: '...', variant: 'up'   }, value: '—', label: 'Festas este mês',     view: 'Reservas'   },
+	{ tone: 'purple', icon: '💵', trend: { label: '...', variant: 'up'   }, value: '—', label: 'Faturamento do mês',  view: 'Financeiro' },
+	{ tone: 'teal',   icon: '✅', trend: { label: '...', variant: 'up'   }, value: '—', label: 'Taxa de adimplência', view: 'Financeiro' },
+	{ tone: 'yellow', icon: '⚠️', trend: { label: '...', variant: 'down' }, value: '—', label: 'Pendências em aberto',view: 'Financeiro' },
 ]
 
 const fmt = (v) =>
@@ -68,15 +64,13 @@ function App() {
 	const [authenticated, setAuthenticated] = useState(isLogged())
 	const [ctaKey, setCtaKey] = useState(0)
 
-	// Dados dinâmicos da tela inicial
 	const [kpis, setKpis] = useState(KPI_SKELETON)
 	const [upcomingEvents, setUpcomingEvents] = useState([])
 	const [pendencias, setPendencias] = useState([])
-	const [activities, setActivities] = useState([])
+	const [activities] = useState([])
 
 	const meta = screenMeta[activeView] ?? screenMeta['Tela inicial']
 
-	// Carrega dados do dashboard quando na tela inicial
 	useEffect(() => {
 		if (!authenticated) return
 		carregarDashboard()
@@ -90,7 +84,6 @@ function App() {
 				apiFetch('/financeiro/pendencias'),
 			])
 
-			// KPIs dinâmicos
 			if (rResumo.ok) {
 				const r = await rResumo.json()
 				setKpis([
@@ -124,12 +117,11 @@ function App() {
 						trend: { label: `${r.qtdPendencias} item${r.qtdPendencias !== 1 ? 's' : ''}`, variant: 'down' },
 						value: fmt(r.totalPendencias),
 						label: 'Pendências em aberto',
-						view: 'Pendências',
+						view: 'Financeiro',
 					},
 				])
 			}
 
-			// Próximos eventos
 			if (rProximos.ok) {
 				const evs = await rProximos.json()
 				setUpcomingEvents(
@@ -144,7 +136,7 @@ function App() {
 							client: `${e.cliente ? `Cliente: ${e.cliente.nome} · ` : ''}${e.horario?.slice(0, 5) ?? ''}`,
 							tags: [
 								...(e.temaFesta ? [{ label: `🎉 ${e.temaFesta}`, className: 'bg-[#EEE4FF] text-[#6B35C1]' }] : []),
-								...(e.numeroCriancas > 0 ? [{ label: `${e.numeroCriancas} convidados`, className: 'bg-[#D7FBF3] text-[#0B7A5E]' }] : []),
+								...(e.numeroCriancas > 0 ? [{ label: `${e.numeroCriancas} crianças`, className: 'bg-[#D7FBF3] text-[#0B7A5E]' }] : []),
 								...(e.buffet ? [{ label: e.buffet, className: 'bg-[#FFE8F1] text-[#C9365A]' }] : []),
 							],
 							status: e.status === 'confirmado'
@@ -157,7 +149,6 @@ function App() {
 				)
 			}
 
-			// Pendências para o widget
 			if (rPend.ok) {
 				const p = await rPend.json()
 				const itens = [
@@ -178,7 +169,6 @@ function App() {
 				].slice(0, 4)
 				setPendencias(itens)
 			}
-
 		} catch (err) {
 			console.error('Erro ao carregar dashboard:', err)
 		}
@@ -229,8 +219,6 @@ function App() {
 						<Contratos onNovoContrato={ctaKey} />
 					) : activeView === 'Financeiro' ? (
 						<Financeiro onNovoLancamento={ctaKey} />
-					) : activeView === 'Pendências' ? (
-						<PendenciasPage onVerFinanceiro={() => goTo('Financeiro')} />
 					) : (
 						<SectionScreen view={activeView} onBack={() => goTo('Tela inicial')} onOpen={goTo} />
 					)}
@@ -250,7 +238,7 @@ function TelaInicialContent({ onOpen, kpis, upcomingEvents, pendencias, activiti
 			</section>
 			<section className="grid gap-4 xl:grid-cols-[1.5fr_0.8fr]">
 				<UpcomingFestas events={upcomingEvents} onAction={() => onOpen('Reservas')} />
-				<Pendencias items={pendencias} onAction={() => onOpen('Pendências')} />
+				<Pendencias items={pendencias} onAction={() => onOpen('Financeiro')} />
 			</section>
 			<section className="grid gap-4 xl:grid-cols-2">
 				<MiniCalendar />
@@ -263,7 +251,7 @@ function TelaInicialContent({ onOpen, kpis, upcomingEvents, pendencias, activiti
 function SectionScreen({ view, onBack, onOpen }) {
 	const sections = {
 		Buffets:    { summary: 'Gerencie pacotes, temas e serviços adicionais disponíveis.', items: ['Buffet Kids · disponível', 'Buffet Premium · limitado', 'Buffet Standard · agenda aberta'], actions: [{ label: 'Ver estoque', next: 'Estoque' }, { label: 'Ver reservas', next: 'Reservas' }] },
-		Relatórios: { summary: 'Resumo consolidado de reservas, receita e adimplência.', items: ['Acesse o módulo financeiro para ver o faturamento', 'Veja reservas do mês em Reservas', 'Pendências estão em Pendências'], actions: [{ label: 'Abrir financeiro', next: 'Financeiro' }, { label: 'Ver pendências', next: 'Pendências' }] },
+		Relatórios: { summary: 'Resumo consolidado de reservas, receita e adimplência.', items: ['Acesse o módulo financeiro para ver o faturamento', 'Veja reservas do mês em Reservas'], actions: [{ label: 'Abrir financeiro', next: 'Financeiro' }, { label: 'Ver reservas', next: 'Reservas' }] },
 	}
 
 	const content = sections[view] ?? sections.Relatórios
@@ -300,7 +288,7 @@ function SectionScreen({ view, onBack, onOpen }) {
 }
 
 function screenIcon(view) {
-	const icons = { Reservas: '📅', Clientes: '👪', Financeiro: '💰', Pendências: '⚠️', Contratos: '📄', Buffets: '🍰', Relatórios: '📊', Estoque: '📦' }
+	const icons = { Reservas: '📅', Clientes: '👪', Financeiro: '💰', Contratos: '📄', Buffets: '🍰', Relatórios: '📊', Estoque: '📦' }
 	return icons[view] ?? '✨'
 }
 
