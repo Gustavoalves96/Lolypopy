@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Login from './components/Login.jsx'
-import { isLogged } from './api.js'
+import { isLogged, apiFetch } from './api.js'
 import { Sidebar } from './components/Sidebar.jsx'
 import { Topbar } from './components/Topbar.jsx'
 import { KpiCard } from './components/KpiCard.jsx'
@@ -13,6 +13,8 @@ import Estoque from './components/Estoque.jsx'
 import Clientes from './components/Clientes.jsx'
 import Reservas from './components/Reservas.jsx'
 import Contratos from './components/Contratos.jsx'
+import Financeiro from './components/Financeiro.jsx'
+import PendenciasPage from './components/PendenciasPage.jsx'
 
 const sidebarSections = [
 	{
@@ -38,82 +40,149 @@ const sidebarSections = [
 	},
 ]
 
-const kpis = [
-	{ tone: 'pink', icon: '🎉', trend: { label: '↑ 12%', variant: 'up' }, value: '8', label: 'Festas este mês', view: 'Reservas' },
-	{ tone: 'purple', icon: '💵', trend: { label: '↑ 8%', variant: 'up' }, value: 'R$ 24.800', label: 'Faturamento do mês', view: 'Financeiro' },
-	{ tone: 'teal', icon: '✅', trend: { label: '↑ 5%', variant: 'up' }, value: '94%', label: 'Taxa de adimplência', view: 'Financeiro' },
-	{ tone: 'yellow', icon: '⚠️', trend: { label: '3 em atraso', variant: 'down' }, value: 'R$ 3.200', label: 'Pendências em aberto', view: 'Pendências' },
-]
-
-const upcomingEvents = [
-	{
-		day: '22', month: 'Mai',
-		name: 'Aniversário da Sofia, 5 anos',
-		client: 'Cliente: Maria Souza · 14h–18h',
-		tags: [
-			{ label: '🦄 Unicórnio', className: 'bg-[#EEE4FF] text-[#6B35C1]' },
-			{ label: '60 convidados', className: 'bg-[#D7FBF3] text-[#0B7A5E]' },
-			{ label: 'Buffet Premium', className: 'bg-[#FFE8F1] text-[#C9365A]' },
-		],
-		status: { label: 'Confirmado', className: 'bg-[#D7FBF3] text-[#0B7A5E]' },
-	},
-	{
-		day: '25', month: 'Mai',
-		name: 'Aniversário do Lucas, 7 anos',
-		client: 'Cliente: João Lima · 15h–19h',
-		tags: [
-			{ label: '🦸 Super-heróis', className: 'bg-[#EEE4FF] text-[#6B35C1]' },
-			{ label: '80 convidados', className: 'bg-[#D7FBF3] text-[#0B7A5E]' },
-			{ label: 'Buffet Standard', className: 'bg-[#FFE8F1] text-[#C9365A]' },
-		],
-		status: { label: 'Pgto. pendente', className: 'bg-[#FFF5D6] text-[#A07800]' },
-	},
-]
-
-const pendencias = [
-	{ name: 'João Lima', description: '2ª parcela · venceu 10/05', amount: 'R$ 1.200', dotClass: 'bg-[#EF476F]', amountClass: 'text-[#EF476F]' },
-	{ name: 'Fernanda Ramos', description: 'Sinal · venceu 08/05', amount: 'R$ 800', dotClass: 'bg-[#EF476F]', amountClass: 'text-[#EF476F]' },
-	{ name: 'Carlos Oliveira', description: '3ª parcela · vence 20/05', amount: 'R$ 1.200', dotClass: 'bg-[#FFD166]', amountClass: 'text-[#B48E00]' },
-]
-
-const calendar = { label: 'maio', name: 'Maio 2026', weekdays: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'] }
-const calendarGrid = [
-	{ empty: true, label: '', className: 'text-transparent' },
-	{ empty: true, label: '', className: 'text-transparent' },
-	{ empty: true, label: '', className: 'text-transparent' },
-	{ empty: true, label: '', className: 'text-transparent' },
-	...Array.from({ length: 31 }, (_, i) => ({ label: String(i + 1), className: 'text-[#2D1B4E] hover:bg-[#F0E6F6]' })),
-	{ empty: true, label: '', className: 'text-transparent' },
-	{ empty: true, label: '', className: 'text-transparent' },
-]
-const calendarLegend = [
-	{ label: 'Festa confirmada', dotClass: 'bg-[#FF6B9D]' },
-	{ label: 'Em análise', dotClass: 'bg-[#FFD166]' },
-	{ label: 'Hoje', dotClass: 'bg-[#9B5DE5]' },
-]
-const activities = [
-	{ icon: '📄', iconClass: 'bg-[#FFE8F1] text-[#FF6B9D]', description: 'Contrato de Maria Souza foi assinado', time: 'Hoje, 10:32' },
-	{ icon: '💸', iconClass: 'bg-[#D7FBF3] text-[#0B9B73]', description: 'Pagamento de R$ 1.500 recebido de Carlos', time: 'Hoje, 09:14' },
-	{ icon: '🎉', iconClass: 'bg-[#EEE4FF] text-[#9B5DE5]', description: 'Nova reserva criada para Isabela · 31/05', time: 'Ontem, 16:45' },
-]
-
 const screenMeta = {
 	'Tela inicial': { title: 'Bem vinda, Sinéia 👋', subtitle: 'Gestão do salão Lolypopy', ctaLabel: 'Nova reserva', ctaTarget: 'Reservas' },
 	Reservas:       { title: 'Reservas', subtitle: 'Agenda, confirmações e próximos eventos', ctaLabel: 'Nova reserva', ctaTarget: 'Reservas' },
 	Clientes:       { title: 'Clientes', subtitle: 'Cadastro, histórico e contato dos responsáveis', ctaLabel: 'Novo cliente', ctaTarget: 'Clientes' },
 	Estoque:        { title: 'Estoque', subtitle: 'Produtos, quantidades mínimas e movimentações', ctaLabel: 'Novo produto', ctaTarget: 'Estoque' },
-	Financeiro:     { title: 'Financeiro', subtitle: 'Recebimentos, faturamento e caixa', ctaLabel: 'Nova cobrança', ctaTarget: 'Financeiro' },
-	Pendências:     { title: 'Pendências', subtitle: 'Itens atrasados e contratos aguardando ação', ctaLabel: 'Enviar lembrete', ctaTarget: 'Pendências' },
-	Contratos: { title: 'Contratos', subtitle: '...', ctaLabel: 'Novo contrato', ctaTarget: 'Contratos' },
+	Financeiro:     { title: 'Financeiro', subtitle: 'Recebimentos, faturamento e caixa', ctaLabel: 'Novo lançamento', ctaTarget: 'Financeiro' },
+	Pendências:     { title: 'Pendências', subtitle: 'Itens atrasados e contratos aguardando ação', ctaLabel: 'Ver financeiro', ctaTarget: 'Financeiro' },
+	Contratos:      { title: 'Contratos', subtitle: 'Assinaturas, anexos e contratos em andamento', ctaLabel: 'Novo contrato', ctaTarget: 'Contratos' },
 	Buffets:        { title: 'Buffets', subtitle: 'Pacotes, serviços e disponibilidade de menu', ctaLabel: 'Novo buffet', ctaTarget: 'Buffets' },
 	Relatórios:     { title: 'Relatórios', subtitle: 'Indicadores consolidados da operação', ctaLabel: 'Exportar PDF', ctaTarget: 'Relatórios' },
 }
+
+// KPIs padrão enquanto carrega
+const KPI_SKELETON = [
+	{ tone: 'pink',   icon: '🎉', trend: { label: '...', variant: 'up'   }, value: '—', label: 'Festas este mês',     view: 'Reservas'    },
+	{ tone: 'purple', icon: '💵', trend: { label: '...', variant: 'up'   }, value: '—', label: 'Faturamento do mês',  view: 'Financeiro'  },
+	{ tone: 'teal',   icon: '✅', trend: { label: '...', variant: 'up'   }, value: '—', label: 'Taxa de adimplência', view: 'Financeiro'  },
+	{ tone: 'yellow', icon: '⚠️', trend: { label: '...', variant: 'down' }, value: '—', label: 'Pendências em aberto',view: 'Pendências'  },
+]
+
+const fmt = (v) =>
+	Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
 function App() {
 	const [activeView, setActiveView] = useState('Tela inicial')
 	const [authenticated, setAuthenticated] = useState(isLogged())
 	const [ctaKey, setCtaKey] = useState(0)
+
+	// Dados dinâmicos da tela inicial
+	const [kpis, setKpis] = useState(KPI_SKELETON)
+	const [upcomingEvents, setUpcomingEvents] = useState([])
+	const [pendencias, setPendencias] = useState([])
+	const [activities, setActivities] = useState([])
+
 	const meta = screenMeta[activeView] ?? screenMeta['Tela inicial']
+
+	// Carrega dados do dashboard quando na tela inicial
+	useEffect(() => {
+		if (!authenticated) return
+		carregarDashboard()
+	}, [authenticated])
+
+	async function carregarDashboard() {
+		try {
+			const [rResumo, rProximos, rPend] = await Promise.all([
+				apiFetch('/financeiro/resumo-geral'),
+				apiFetch('/eventos/proximos'),
+				apiFetch('/financeiro/pendencias'),
+			])
+
+			// KPIs dinâmicos
+			if (rResumo.ok) {
+				const r = await rResumo.json()
+				setKpis([
+					{
+						tone: 'pink',
+						icon: '🎉',
+						trend: { label: `${r.festasDoMes} confirmada${r.festasDoMes !== 1 ? 's' : ''}`, variant: 'up' },
+						value: String(r.festasDoMes),
+						label: 'Festas este mês',
+						view: 'Reservas',
+					},
+					{
+						tone: 'purple',
+						icon: '💵',
+						trend: { label: `${r.taxaAdimplencia}% adimplência`, variant: 'up' },
+						value: fmt(r.totalReceitas),
+						label: 'Faturamento do mês',
+						view: 'Financeiro',
+					},
+					{
+						tone: 'teal',
+						icon: '✅',
+						trend: { label: fmt(r.receitasPagas) + ' recebido', variant: 'up' },
+						value: `${r.taxaAdimplencia}%`,
+						label: 'Taxa de adimplência',
+						view: 'Financeiro',
+					},
+					{
+						tone: 'yellow',
+						icon: '⚠️',
+						trend: { label: `${r.qtdPendencias} item${r.qtdPendencias !== 1 ? 's' : ''}`, variant: 'down' },
+						value: fmt(r.totalPendencias),
+						label: 'Pendências em aberto',
+						view: 'Pendências',
+					},
+				])
+			}
+
+			// Próximos eventos
+			if (rProximos.ok) {
+				const evs = await rProximos.json()
+				setUpcomingEvents(
+					evs.slice(0, 3).map((e) => {
+						const d = new Date(e.data + 'T12:00:00')
+						return {
+							day: String(d.getDate()).padStart(2, '0'),
+							month: d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', ''),
+							name: e.temaFesta
+								? `${e.temaFesta}${e.cliente?.nomeFilho ? ` — ${e.cliente.nomeFilho}` : ''}`
+								: `Evento de ${e.cliente?.nome ?? 'cliente'}`,
+							client: `${e.cliente ? `Cliente: ${e.cliente.nome} · ` : ''}${e.horario?.slice(0, 5) ?? ''}`,
+							tags: [
+								...(e.temaFesta ? [{ label: `🎉 ${e.temaFesta}`, className: 'bg-[#EEE4FF] text-[#6B35C1]' }] : []),
+								...(e.numeroCriancas > 0 ? [{ label: `${e.numeroCriancas} convidados`, className: 'bg-[#D7FBF3] text-[#0B7A5E]' }] : []),
+								...(e.buffet ? [{ label: e.buffet, className: 'bg-[#FFE8F1] text-[#C9365A]' }] : []),
+							],
+							status: e.status === 'confirmado'
+								? { label: 'Confirmado', className: 'bg-[#D7FBF3] text-[#0B7A5E]' }
+								: e.status === 'pendente'
+								? { label: 'Pgto. pendente', className: 'bg-[#FFF5D6] text-[#A07800]' }
+								: { label: e.status, className: 'bg-[#F0E6F6] text-[#8B7BAD]' },
+						}
+					}),
+				)
+			}
+
+			// Pendências para o widget
+			if (rPend.ok) {
+				const p = await rPend.json()
+				const itens = [
+					...p.lancamentosAtrasados.slice(0, 2).map((l) => ({
+						name: l.cliente?.nome ?? l.descricao ?? 'Lançamento',
+						description: `${l.categoria ?? 'Pendente'} · venceu ${new Date(l.dataVencimento + 'T12:00:00').toLocaleDateString('pt-BR')}`,
+						amount: fmt(l.valor),
+						dotClass: 'bg-[#EF476F]',
+						amountClass: 'text-[#EF476F]',
+					})),
+					...p.eventosComDebt.slice(0, 2).map((e) => ({
+						name: e.cliente?.nome ?? 'Evento',
+						description: `Saldo em aberto · festa ${new Date(e.data + 'T12:00:00').toLocaleDateString('pt-BR')}`,
+						amount: fmt(Number(e.valorTotal) - Number(e.valorPago)),
+						dotClass: 'bg-[#FFD166]',
+						amountClass: 'text-[#B48E00]',
+					})),
+				].slice(0, 4)
+				setPendencias(itens)
+			}
+
+		} catch (err) {
+			console.error('Erro ao carregar dashboard:', err)
+		}
+	}
 
 	const activeSections = sidebarSections.map((section) => ({
 		...section,
@@ -123,7 +192,7 @@ function App() {
 	const goTo = (view) => setActiveView(view)
 
 	const handleCtaClick = () => {
-		if (['Estoque', 'Clientes', 'Reservas', 'Contratos'].includes(activeView)) {
+		if (['Estoque', 'Clientes', 'Reservas', 'Contratos', 'Financeiro'].includes(activeView)) {
 			setCtaKey((k) => k + 1)
 			return
 		}
@@ -148,9 +217,6 @@ function App() {
 							kpis={kpis}
 							upcomingEvents={upcomingEvents}
 							pendencias={pendencias}
-							calendar={calendar}
-							calendarGrid={calendarGrid}
-							calendarLegend={calendarLegend}
 							activities={activities}
 						/>
 					) : activeView === 'Estoque' ? (
@@ -160,7 +226,11 @@ function App() {
 					) : activeView === 'Reservas' ? (
 						<Reservas onNovaReserva={ctaKey} />
 					) : activeView === 'Contratos' ? (
-    					<Contratos onNovoContrato={ctaKey} />
+						<Contratos onNovoContrato={ctaKey} />
+					) : activeView === 'Financeiro' ? (
+						<Financeiro onNovoLancamento={ctaKey} />
+					) : activeView === 'Pendências' ? (
+						<PendenciasPage onVerFinanceiro={() => goTo('Financeiro')} />
 					) : (
 						<SectionScreen view={activeView} onBack={() => goTo('Tela inicial')} onOpen={goTo} />
 					)}
@@ -170,7 +240,7 @@ function App() {
 	)
 }
 
-function TelaInicialContent({ onOpen, kpis, upcomingEvents, pendencias, calendar, calendarGrid, calendarLegend, activities }) {
+function TelaInicialContent({ onOpen, kpis, upcomingEvents, pendencias, activities }) {
 	return (
 		<div className="mx-auto flex w-full max-w-400 flex-col gap-5">
 			<section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -192,14 +262,11 @@ function TelaInicialContent({ onOpen, kpis, upcomingEvents, pendencias, calendar
 
 function SectionScreen({ view, onBack, onOpen }) {
 	const sections = {
-		Financeiro:  { summary: 'Acompanhe entradas, pendências e os repasses do mês.', items: ['Faturamento do mês: R$ 24.800', 'Recebimentos confirmados: 94%', 'Pendências abertas: R$ 3.200'], actions: [{ label: 'Ver pendências', next: 'Pendências' }, { label: 'Abrir relatórios', next: 'Relatórios' }] },
-		Pendências:  { summary: 'Itens atrasados, lembretes e contratos aguardando assinatura.', items: ['João Lima · R$ 1.200 · vencido', 'Fernanda Ramos · R$ 800 · vencido', 'Patrícia Nunes · contrato pendente'], actions: [{ label: 'Ir para financeiro', next: 'Financeiro' }] },
-		Contratos:   { summary: 'Acompanhe assinaturas, anexos e contratos aguardando retorno.', items: ['Contrato Maria Souza · assinado', 'Contrato João Lima · em revisão', 'Contrato Patrícia Nunes · aguardando assinatura'], actions: [{ label: 'Ver clientes', next: 'Clientes' }] },
-		Buffets:     { summary: 'Gerencie pacotes, temas e serviços adicionais disponíveis.', items: ['Buffet Kids · disponível', 'Buffet Premium · limitado', 'Buffet Standard · agenda aberta'], actions: [{ label: 'Ver estoque', next: 'Estoque' }, { label: 'Ver reservas', next: 'Reservas' }] },
-		Relatórios:  { summary: 'Resumo consolidado de reservas, receita e adimplência.', items: ['12 reservas confirmadas', 'R$ 24.800 faturados', '3 pendências em aberto'], actions: [{ label: 'Abrir financeiro', next: 'Financeiro' }] },
+		Buffets:    { summary: 'Gerencie pacotes, temas e serviços adicionais disponíveis.', items: ['Buffet Kids · disponível', 'Buffet Premium · limitado', 'Buffet Standard · agenda aberta'], actions: [{ label: 'Ver estoque', next: 'Estoque' }, { label: 'Ver reservas', next: 'Reservas' }] },
+		Relatórios: { summary: 'Resumo consolidado de reservas, receita e adimplência.', items: ['Acesse o módulo financeiro para ver o faturamento', 'Veja reservas do mês em Reservas', 'Pendências estão em Pendências'], actions: [{ label: 'Abrir financeiro', next: 'Financeiro' }, { label: 'Ver pendências', next: 'Pendências' }] },
 	}
 
-	const content = sections[view] ?? sections.Financeiro
+	const content = sections[view] ?? sections.Relatórios
 
 	return (
 		<div className="mx-auto flex w-full max-w-300 flex-col gap-5">
