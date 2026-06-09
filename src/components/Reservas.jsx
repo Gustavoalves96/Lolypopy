@@ -64,6 +64,7 @@ const FORM_RESERVA_VAZIO = {
   status: 'pendente',
   valorTotal: '',
   valorPago: '',
+  parcelas: '1',
   observacoes: '',
 }
 
@@ -78,11 +79,15 @@ const FORM_CLIENTE_VAZIO = {
 }
 
 // Preview financeiro em tempo real
-function PreviewFinanceiro({ valorTotal, valorPago }) {
+function PreviewFinanceiro({ valorTotal, valorPago, parcelas }) {
   const total = Number(valorTotal) || 0
   const pago = Number(valorPago) || 0
+  const nParcelas = Number(parcelas) || 1
   const restante = total - pago
   const pct = total > 0 ? Math.min(100, Math.round((pago / total) * 100)) : 0
+  const valorParcela = nParcelas > 1 && restante > 0
+    ? Math.round((restante / nParcelas) * 100) / 100
+    : 0
 
   if (total === 0) return null
 
@@ -106,27 +111,46 @@ function PreviewFinanceiro({ valorTotal, valorPago }) {
           <div className="text-[13px] font-extrabold text-[#2D1B4E]">{fmt(total)}</div>
         </div>
         <div className="rounded-xl bg-[#D7FBF3] px-2 py-2">
-          <div className="text-[11px] text-[#0B7A5E]">Pago ✓</div>
+          <div className="text-[11px] text-[#0B7A5E]">Sinal ✓</div>
           <div className="text-[13px] font-extrabold text-[#0B7A5E]">{fmt(pago)}</div>
         </div>
         <div className={`rounded-xl px-2 py-2 ${restante > 0 ? 'bg-[#FFE8F1]' : 'bg-[#D7FBF3]'}`}>
           <div className={`text-[11px] ${restante > 0 ? 'text-[#C9365A]' : 'text-[#0B7A5E]'}`}>
-            {restante > 0 ? 'Pendente ⚠️' : 'Quitado 🎉'}
+            {restante > 0 ? 'Restante ⚠️' : 'Quitado 🎉'}
           </div>
           <div className={`text-[13px] font-extrabold ${restante > 0 ? 'text-[#C9365A]' : 'text-[#0B7A5E]'}`}>
             {fmt(restante > 0 ? restante : 0)}
           </div>
         </div>
       </div>
-      {total > 0 && (
-        <div className="mt-3 rounded-xl bg-[#EEE4FF] px-3 py-2 text-[11px] text-[#6B35C1]">
-          💡 {pago > 0 && restante > 0
-            ? `Sinal de ${fmt(pago)} + pendência de ${fmt(restante)} lançados no Financeiro.`
-            : pago > 0 && restante <= 0
-            ? `Pagamento completo de ${fmt(total)} lançado no Financeiro.`
-            : `Informe o valor pago para lançar no Financeiro.`}
+
+      {/* Parcelas */}
+      {nParcelas > 1 && restante > 0 && (
+        <div className="mt-3 rounded-xl bg-[#FFF5D6] px-3 py-2.5">
+          <div className="text-[11px] font-bold text-[#A07800]">
+            📅 {nParcelas}x de {fmt(valorParcela)} mensais
+          </div>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {Array.from({ length: nParcelas }).map((_, i) => (
+              <span key={i} className="rounded-lg bg-white px-2 py-0.5 text-[10px] font-semibold text-[#A07800] shadow-sm">
+                {i + 1}ª {fmt(i === nParcelas - 1
+                  ? Math.round((restante - valorParcela * (nParcelas - 1)) * 100) / 100
+                  : valorParcela)}
+              </span>
+            ))}
+          </div>
         </div>
       )}
+
+      <div className="mt-3 rounded-xl bg-[#EEE4FF] px-3 py-2 text-[11px] text-[#6B35C1]">
+        💡 {nParcelas === 1
+          ? pago > 0 && restante > 0
+            ? `Sinal de ${fmt(pago)} + saldo de ${fmt(restante)} à vista.`
+            : pago > 0 && restante <= 0
+            ? `Pagamento completo de ${fmt(total)}.`
+            : `Será cobrado ${fmt(total)} à vista.`
+          : `${nParcelas}x de ${fmt(valorParcela)} — parcelas criadas automaticamente no Financeiro.`}
+      </div>
     </div>
   )
 }
@@ -191,6 +215,7 @@ export default function Reservas({ onNovaReserva }) {
       status: evento.status || 'pendente',
       valorTotal: evento.valorTotal || '',
       valorPago: evento.valorPago || '',
+      parcelas: String(evento.parcelas || 1),
       observacoes: evento.observacoes || '',
     })
     setNovoClienteAberto(false)
@@ -233,6 +258,7 @@ export default function Reservas({ onNovaReserva }) {
         numeroPessoas: form.numeroPessoas ? Number(form.numeroPessoas) : 0,
         valorTotal: form.valorTotal ? Number(form.valorTotal) : 0,
         valorPago: form.valorPago ? Number(form.valorPago) : 0,
+        parcelas: form.parcelas ? Number(form.parcelas) : 1,
       }
       const url = eventoSelecionado ? `/eventos/${eventoSelecionado.id}` : `/eventos`
       const method = eventoSelecionado ? 'PATCH' : 'POST'
@@ -525,7 +551,36 @@ export default function Reservas({ onNovaReserva }) {
               <input className={inputClass} type="number" min="0" step="0.01" value={form.valorPago} onChange={(e) => setForm(f => ({ ...f, valorPago: e.target.value }))} placeholder="0,00" />
             </Campo>
 
-            <PreviewFinanceiro valorTotal={form.valorTotal} valorPago={form.valorPago} />
+            {/* Selector de parcelamento */}
+            <div className="col-span-2 mb-2">
+              <label className="mb-1.5 block text-[13px] font-semibold text-[#2D1B4E]">Parcelamento</label>
+              <div className="flex flex-wrap gap-2">
+                {[1,2,3,4,5,6,7,8,9,10,11,12].map((n) => {
+                  const total = Number(form.valorTotal) || 0
+                  const pago = Number(form.valorPago) || 0
+                  const restante = total - pago
+                  const valorParc = n > 1 && restante > 0
+                    ? fmt(Math.round((restante / n) * 100) / 100)
+                    : null
+                  return (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, parcelas: String(n) }))}
+                      className={`rounded-xl px-3 py-1.5 text-xs font-bold transition ${
+                        String(form.parcelas) === String(n)
+                          ? 'bg-[#9B5DE5] text-white shadow-lg shadow-[#9B5DE5]/20'
+                          : 'border border-[#F0E6F6] text-[#8B7BAD] hover:bg-[#EEE4FF]'
+                      }`}
+                    >
+                      {n === 1 ? 'À vista' : `${n}x${valorParc ? ` ${valorParc}` : ''}`}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <PreviewFinanceiro valorTotal={form.valorTotal} valorPago={form.valorPago} parcelas={form.parcelas} />
 
             {/* ── SEÇÃO: OBSERVAÇÕES ── */}
             <div className="col-span-2">

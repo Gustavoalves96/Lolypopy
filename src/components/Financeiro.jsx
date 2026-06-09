@@ -404,7 +404,7 @@ export default function Financeiro({ onNovoLancamento }) {
                           {l.cliente && <span>👪 {l.cliente.nome}</span>}
                           {l.evento && <span>🎉 Evento #{l.evento.id}</span>}
                           {l.categoria !== 'outro' && (
-                            <span>📁 {CATEGORIA_LABELS[l.categoria]}</span>
+                            <span>📁 {l.descricao?.match(/Parcela \d+\/\d+/) ? l.descricao.match(/Parcela \d+\/\d+/)[0] : CATEGORIA_LABELS[l.categoria]}</span>
                           )}
                         </div>
                       </div>
@@ -422,8 +422,9 @@ export default function Financeiro({ onNovoLancamento }) {
                             <button
                               onClick={() => marcarPago(l)}
                               className="rounded-xl border border-[#D7FBF3] bg-white px-2.5 py-1 text-[11px] font-bold text-[#0B7A5E] transition hover:bg-[#D7FBF3]"
+                              title={l.categoria === 'parcela' ? 'Marcar apenas esta parcela como paga' : 'Marcar como pago'}
                             >
-                              ✓ Pago
+                              {l.categoria === 'parcela' ? '✓ Parcela paga' : '✓ Pago'}
                             </button>
                           )}
                           <button
