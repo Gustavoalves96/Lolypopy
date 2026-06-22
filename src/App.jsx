@@ -16,6 +16,7 @@ import Reservas from './components/Reservas.jsx'
 import Contratos from './components/Contratos.jsx'
 import Financeiro from './components/Financeiro.jsx'
 import Buffets from './components/Buffets.jsx'
+import Relatorios from './components/Relatorios.jsx'
 
 const sidebarSections = [
 	{
@@ -239,6 +240,7 @@ export default function App() {
 					  : activeView === 'Contratos'  ? <Contratos onNovoContrato={ctaKey} />
 					  : activeView === 'Financeiro' ? <Financeiro onNovoLancamento={ctaKey} />
 					  : activeView === 'Buffets'    ? <Buffets onNovoBuffet={ctaKey} />
+					  : activeView === 'Relatórios' ? <Relatorios />
 					  : <SectionScreen view={activeView} onBack={() => goTo('Tela inicial')} onOpen={goTo} />}
 				</div>
 			</main>
