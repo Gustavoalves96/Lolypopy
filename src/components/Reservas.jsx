@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { CardShell } from './CardShell.jsx'
 import { Modal } from './ui/Modal.jsx'
 import { Campo, inputClass } from './ui/Campo.jsx'
+import { SkeletonRows } from './ui/Skeleton.jsx'
 import { mascaraTelefone } from '../utils/masks.js'
 import { apiFetch } from '../api.js'
 
@@ -54,7 +55,7 @@ const FORM_RESERVA_VAZIO = {
 
 const FORM_CLIENTE_VAZIO = {
   nome: '', telefone: '', email: '', nomeFilho: '',
-  dataNascimentoFilho: '', cidade: '', observacoes: '',
+  idadeAniversariante: '', cidade: '', observacoes: '',
 }
 
 // ─── Preview financeiro ────────────────────────────────────────────────────
@@ -71,7 +72,7 @@ function PreviewFinanceiro({ valorTotal, valorPago, parcelas }) {
 
   return (
     <div className="col-span-2 mb-4 rounded-2xl border border-[#F0E6F6] bg-[#FFF8FB] p-4">
-      <div className="mb-2 text-[12px] font-bold uppercase tracking-[0.1em] text-[#8B7BAD]">Resumo financeiro</div>
+      <div className="mb-2 text-[12px] font-bold uppercase tracking-widest text-[#8B7BAD]">Resumo financeiro</div>
       <div className="mb-3 flex items-center gap-2">
         <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#F0E6F6]">
           <div className={`h-full rounded-full transition-all ${pct === 100 ? 'bg-[#06D6A0]' : 'bg-[#9B5DE5]'}`} style={{ width: `${pct}%` }} />
@@ -126,7 +127,7 @@ function PreviewFinanceiro({ valorTotal, valorPago, parcelas }) {
 }
 
 // ─── Componente principal ──────────────────────────────────────────────────
-export default function Reservas({ onNovaReserva }) {
+export default function Reservas({ onNovaReserva, acaoCalendario }) {
   const [mes, setMes]       = useState(new Date().getMonth() + 1)
   const [ano, setAno]       = useState(new Date().getFullYear())
   const [eventos, setEventos]   = useState([])
@@ -147,6 +148,7 @@ export default function Reservas({ onNovaReserva }) {
   const [salvandoCliente, setSalvandoCliente] = useState(false)
 
   const [confirmandoDeletar, setConfirmandoDeletar] = useState(null)
+  const [pendingEventId, setPendingEventId] = useState(null)
 
   async function carregar() {
     try {
@@ -163,13 +165,29 @@ export default function Reservas({ onNovaReserva }) {
 
   useEffect(() => { carregar() }, [mes, ano])
   useEffect(() => { if (onNovaReserva) abrirNovo() }, [onNovaReserva])
+  useEffect(() => {
+    if (!acaoCalendario) return
+    if (acaoCalendario.tipo === 'nova') {
+      abrirNovo(acaoCalendario.data)
+    } else if (acaoCalendario.tipo === 'editar') {
+      setMes(acaoCalendario.mes)
+      setAno(acaoCalendario.ano)
+      setPendingEventId(acaoCalendario.eventoId)
+    }
+  }, [acaoCalendario])
+  useEffect(() => {
+    if (!pendingEventId || carregando) return
+    const ev = eventos.find(e => e.id === pendingEventId)
+    if (ev) { abrirEditar(ev); setPendingEventId(null) }
+    else setPendingEventId(null)
+  }, [eventos, carregando, pendingEventId])
 
   useEffect(() => { if (tentouSalvar) setErros(validarReserva(form)) }, [form, tentouSalvar])
   useEffect(() => { if (tentouSalvarCliente) setErrosCliente(validarCliente(formCliente)) }, [formCliente, tentouSalvarCliente])
 
-  function abrirNovo() {
+  function abrirNovo(dataInicial = '') {
     setEventoSelecionado(null)
-    setForm(FORM_RESERVA_VAZIO)
+    setForm({ ...FORM_RESERVA_VAZIO, data: dataInicial })
     setErros({})
     setTentouSalvar(false)
     setNovoClienteAberto(false)
@@ -289,7 +307,7 @@ export default function Reservas({ onNovaReserva }) {
       {/* LISTA */}
       <CardShell title={`${eventos.length} reserva${eventos.length !== 1 ? 's' : ''} em ${MESES[mes - 1]}`}>
         {carregando ? (
-          <div className="px-5 py-10 text-center text-sm text-[#8B7BAD]">Carregando reservas...</div>
+          <SkeletonRows />
         ) : eventos.length === 0 ? (
           <div className="px-5 py-10 text-center">
             <div className="text-4xl">📅</div>
@@ -329,7 +347,11 @@ export default function Reservas({ onNovaReserva }) {
                         {evento.cliente && (
                           <span>
                             👪 {evento.cliente.nome}
-                            {evento.cliente.nomeFilho && <span className="ml-1 font-semibold text-[#C9365A]">· 🎂 {evento.cliente.nomeFilho}</span>}
+                            {evento.cliente.nomeFilho && (
+                              <span className="ml-1 font-semibold text-[#C9365A]">
+                                · 🎂 {evento.cliente.nomeFilho}{evento.cliente.idadeAniversariante ? ` (${evento.cliente.idadeAniversariante} anos)` : ''}
+                              </span>
+                            )}
                           </span>
                         )}
                         {evento.numeroCriancas > 0 && <span>👦 {evento.numeroCriancas} crianças</span>}
@@ -413,7 +435,7 @@ export default function Reservas({ onNovaReserva }) {
                   <option value="">— Nenhum selecionado —</option>
                   {clientes.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.nome}{c.nomeFilho ? ` · 🎂 ${c.nomeFilho}` : ''}{c.telefone ? ` (${c.telefone})` : ''}
+                      {c.nome}{c.nomeFilho ? ` · 🎂 ${c.nomeFilho}${c.idadeAniversariante ? ` (${c.idadeAniversariante} anos)` : ''}` : ''}{c.telefone ? ` (${c.telefone})` : ''}
                     </option>
                   ))}
                 </select>
@@ -423,7 +445,7 @@ export default function Reservas({ onNovaReserva }) {
             {clienteSelecionado && (
               <div className="col-span-2 mb-4 rounded-2xl bg-[#EEE4FF] px-4 py-3 text-[12px] text-[#6B35C1]">
                 <strong>{clienteSelecionado.nome}</strong>
-                {clienteSelecionado.nomeFilho && <span> · 🎂 {clienteSelecionado.nomeFilho}</span>}
+                {clienteSelecionado.nomeFilho && <span> · 🎂 {clienteSelecionado.nomeFilho}{clienteSelecionado.idadeAniversariante ? ` (${clienteSelecionado.idadeAniversariante} anos)` : ''}</span>}
                 {clienteSelecionado.telefone  && <span> · 📞 {clienteSelecionado.telefone}</span>}
                 {clienteSelecionado.cidade    && <span> · 📍 {clienteSelecionado.cidade}</span>}
               </div>
@@ -438,7 +460,7 @@ export default function Reservas({ onNovaReserva }) {
 
             {novoClienteAberto && (
               <div className="col-span-2 mb-4 rounded-2xl border border-[#EEE4FF] bg-[#FAFAFE] p-4">
-                <div className="mb-3 text-[12px] font-bold uppercase tracking-[0.1em] text-[#9B5DE5]">Novo cliente</div>
+                <div className="mb-3 text-[12px] font-bold uppercase tracking-widest text-[#9B5DE5]">Novo cliente</div>
                 <div className="grid grid-cols-2 gap-x-4">
                   <div className="col-span-2">
                     <Campo label="Nome completo" obrigatorio erro={errosCliente.nome}>
@@ -452,11 +474,11 @@ export default function Reservas({ onNovaReserva }) {
                   <Campo label="E-mail">
                     <input className={inputClass()} type="email" value={formCliente.email} onChange={(e) => setFormCliente(f => ({ ...f, email: e.target.value }))} placeholder="email@email.com" />
                   </Campo>
-                  <Campo label="Nome do filho(a)">
+                  <Campo label="Nome do aniversariante">
                     <input className={inputClass()} value={formCliente.nomeFilho} onChange={(e) => setFormCliente(f => ({ ...f, nomeFilho: e.target.value }))} placeholder="Ex: Sofia" />
                   </Campo>
-                  <Campo label="Data de nascimento">
-                    <input className={inputClass()} type="date" value={formCliente.dataNascimentoFilho} onChange={(e) => setFormCliente(f => ({ ...f, dataNascimentoFilho: e.target.value }))} />
+                  <Campo label="Quantos anos vai fazer">
+                    <input className={inputClass()} type="number" min="1" max="18" value={formCliente.idadeAniversariante} onChange={(e) => setFormCliente(f => ({ ...f, idadeAniversariante: e.target.value }))} placeholder="Ex: 5" />
                   </Campo>
                   <Campo label="Cidade">
                     <input className={inputClass()} value={formCliente.cidade} onChange={(e) => setFormCliente(f => ({ ...f, cidade: e.target.value }))} placeholder="Ex: Porto Alegre" />
@@ -525,7 +547,7 @@ export default function Reservas({ onNovaReserva }) {
 
           <div className="flex gap-3">
             <button onClick={() => setModalAberto(false)} className="flex-1 rounded-2xl border border-[#F0E6F6] py-2.5 text-sm font-bold text-[#8B7BAD] transition hover:bg-[#FFF8FB]">Cancelar</button>
-            <button onClick={salvar} disabled={salvando} className="flex-[2] rounded-2xl bg-[#9B5DE5] py-2.5 text-sm font-bold text-white shadow-lg shadow-[#9B5DE5]/20 transition hover:bg-[#864fe1] disabled:opacity-50">
+            <button onClick={salvar} disabled={salvando} className="flex-2 rounded-2xl bg-[#9B5DE5] py-2.5 text-sm font-bold text-white shadow-lg shadow-[#9B5DE5]/20 transition hover:bg-[#864fe1] disabled:opacity-50">
               {salvando ? 'Salvando...' : eventoSelecionado ? 'Salvar alterações' : 'Criar reserva'}
             </button>
           </div>
@@ -543,7 +565,7 @@ export default function Reservas({ onNovaReserva }) {
           <p className="mt-2 text-[12px] text-[#C9365A]">⚠️ Os lançamentos financeiros vinculados também serão removidos.</p>
           <div className="mt-5 flex gap-3">
             <button onClick={() => setConfirmandoDeletar(null)} className="flex-1 rounded-2xl border border-[#F0E6F6] py-2.5 text-sm font-bold text-[#8B7BAD] transition hover:bg-[#FFF8FB]">Cancelar</button>
-            <button onClick={() => deletar(confirmandoDeletar.id)} className="flex-[2] rounded-2xl bg-[#EF476F] py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-[#d63860]">Sim, remover</button>
+            <button onClick={() => deletar(confirmandoDeletar.id)} className="flex-2 rounded-2xl bg-[#EF476F] py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-[#d63860]">Sim, remover</button>
           </div>
         </Modal>
       )}

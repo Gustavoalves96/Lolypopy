@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { CardShell } from './CardShell.jsx'
 import { Modal } from './ui/Modal.jsx'
 import { Campo, inputClass } from './ui/Campo.jsx'
+import { SkeletonRows } from './ui/Skeleton.jsx'
 import { apiFetch } from '../api.js'
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
@@ -319,7 +320,7 @@ export default function Financeiro({ onNovoLancamento }) {
             title={`${lancamentosFiltrados.length} lançamento${lancamentosFiltrados.length !== 1 ? 's' : ''}`}
           >
             {carregando ? (
-              <div className="px-5 py-10 text-center text-sm text-[#8B7BAD]">Carregando...</div>
+              <SkeletonRows />
             ) : lancamentosFiltrados.length === 0 ? (
               <div className="px-5 py-10 text-center">
                 <div className="text-4xl">💰</div>
@@ -564,7 +565,7 @@ export default function Financeiro({ onNovoLancamento }) {
             <button
               onClick={salvar}
               disabled={!form.valor || !form.dataVencimento || salvando}
-              className="flex-[2] rounded-2xl bg-[#9B5DE5] py-2.5 text-sm font-bold text-white shadow-lg shadow-[#9B5DE5]/20 transition hover:bg-[#864fe1] disabled:opacity-50"
+              className="flex-2 rounded-2xl bg-[#9B5DE5] py-2.5 text-sm font-bold text-white shadow-lg shadow-[#9B5DE5]/20 transition hover:bg-[#864fe1] disabled:opacity-50"
             >
               {salvando
                 ? 'Salvando...'
@@ -595,7 +596,7 @@ export default function Financeiro({ onNovoLancamento }) {
             </button>
             <button
               onClick={() => deletar(confirmandoDeletar.id)}
-              className="flex-[2] rounded-2xl bg-[#EF476F] py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-[#d63860]"
+              className="flex-2 rounded-2xl bg-[#EF476F] py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-[#d63860]"
             >
               Sim, remover
             </button>

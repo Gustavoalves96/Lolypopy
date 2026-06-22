@@ -15,6 +15,7 @@ import Clientes from './components/Clientes.jsx'
 import Reservas from './components/Reservas.jsx'
 import Contratos from './components/Contratos.jsx'
 import Financeiro from './components/Financeiro.jsx'
+import Buffets from './components/Buffets.jsx'
 
 const sidebarSections = [
 	{
@@ -64,6 +65,7 @@ export default function App() {
 	const [activeView, setActiveView]     = useState('Tela inicial')
 	const [authenticated, setAuthenticated] = useState(isLogged())
 	const [ctaKey, setCtaKey]             = useState(0)
+	const [acaoCalendario, setAcaoCalendario] = useState(null)
 
 	const [kpis, setKpis]                 = useState(KPI_SKELETON)
 	const [upcomingEvents, setUpcomingEvents] = useState([])
@@ -195,6 +197,15 @@ export default function App() {
 
 	const goTo = (view) => setActiveView(view)
 
+	function handleDiaCalendario(dataStr, eventos) {
+		setActiveView('Reservas')
+		if (eventos.length > 0) {
+			setAcaoCalendario({ tipo: 'editar', eventoId: eventos[0].id, mes: Number(dataStr.split('-')[1]), ano: Number(dataStr.split('-')[0]), _k: Date.now() })
+		} else {
+			setAcaoCalendario({ tipo: 'nova', data: dataStr, _k: Date.now() })
+		}
+	}
+
 	const handleLogout = () => {
 		clearToken()
 		setAuthenticated(false)
@@ -221,12 +232,13 @@ export default function App() {
 
 				<div className="flex-1 overflow-y-auto px-5 py-6 lg:px-7">
 					{activeView === 'Tela inicial' ? (
-						<TelaInicialContent onOpen={goTo} kpis={kpis} upcomingEvents={upcomingEvents} pendencias={pendencias} activities={activities} />
+						<TelaInicialContent onOpen={goTo} kpis={kpis} upcomingEvents={upcomingEvents} pendencias={pendencias} activities={activities} onDiaCalendario={handleDiaCalendario} />
 					) : activeView === 'Estoque'    ? <Estoque openNewProductKey={ctaKey} />
 					  : activeView === 'Clientes'   ? <Clientes onNovoCliente={ctaKey} />
-					  : activeView === 'Reservas'   ? <Reservas onNovaReserva={ctaKey} />
+					  : activeView === 'Reservas'   ? <Reservas onNovaReserva={ctaKey} acaoCalendario={acaoCalendario} />
 					  : activeView === 'Contratos'  ? <Contratos onNovoContrato={ctaKey} />
 					  : activeView === 'Financeiro' ? <Financeiro onNovoLancamento={ctaKey} />
+					  : activeView === 'Buffets'    ? <Buffets onNovoBuffet={ctaKey} />
 					  : <SectionScreen view={activeView} onBack={() => goTo('Tela inicial')} onOpen={goTo} />}
 				</div>
 			</main>
@@ -234,7 +246,7 @@ export default function App() {
 	)
 }
 
-function TelaInicialContent({ onOpen, kpis, upcomingEvents, pendencias, activities }) {
+function TelaInicialContent({ onOpen, kpis, upcomingEvents, pendencias, activities, onDiaCalendario }) {
 	return (
 		<div className="mx-auto flex w-full max-w-400 flex-col gap-5">
 			<section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -247,7 +259,7 @@ function TelaInicialContent({ onOpen, kpis, upcomingEvents, pendencias, activiti
 				<Pendencias items={pendencias} onAction={() => onOpen('Financeiro')} />
 			</section>
 			<section className="grid gap-4 xl:grid-cols-2">
-				<MiniCalendar />
+				<MiniCalendar onDiaClick={onDiaCalendario} />
 				<RecentActivity items={activities} />
 			</section>
 		</div>

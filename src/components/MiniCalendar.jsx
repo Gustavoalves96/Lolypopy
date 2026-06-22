@@ -12,7 +12,7 @@ const DIAS_SEMANA = ['D','S','T','Q','Q','S','S']
 const ANO = new Date().getFullYear()
 const MESES_DISPONIVEIS = [6,7,8,9,10,11,12]
 
-export function MiniCalendar() {
+export function MiniCalendar({ onDiaClick }) {
   const mesAtual = new Date().getMonth() + 1
   const mesInicio = MESES_DISPONIVEIS.includes(mesAtual) ? mesAtual : 6
   const [mes, setMes] = useState(mesInicio)
@@ -121,11 +121,17 @@ export function MiniCalendar() {
               cellClass += 'bg-[#D7FBF3] text-[#0B7A5E] hover:bg-[#bbf5e8] cursor-pointer '
             }
 
+            const podeClicar = reservado || (!passado && !ehHoje)
+
             return (
               <div
                 key={chave}
                 className={cellClass}
                 title={reservado ? nomes : ''}
+                onClick={() => {
+                  if (!onDiaClick || !podeClicar) return
+                  onDiaClick(chave, diasReservados[chave] ?? [])
+                }}
                 onMouseEnter={(e) => {
                   if (reservado) {
                     const rect = e.currentTarget.getBoundingClientRect()
@@ -146,15 +152,15 @@ export function MiniCalendar() {
         {/* Legenda */}
         <div className="mt-4 flex flex-wrap gap-4 text-[11px] font-semibold text-[#8B7BAD]">
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2.5 w-2.5 rounded-[4px] bg-[#D7FBF3] ring-1 ring-[#0B7A5E]/20" />
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-[#D7FBF3] ring-1 ring-[#0B7A5E]/20" />
             Dia livre
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2.5 w-2.5 rounded-[4px] bg-[#FFE8F1] ring-1 ring-[#EF476F]/20" />
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-[#FFE8F1] ring-1 ring-[#EF476F]/20" />
             Reservado
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2.5 w-2.5 rounded-[4px] bg-[#9B5DE5]" />
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-[#9B5DE5]" />
             Hoje
           </span>
         </div>
@@ -162,7 +168,7 @@ export function MiniCalendar() {
         {/* Resumo do mês */}
         {eventos.length > 0 && (
           <div className="mt-4 rounded-2xl border border-[#F0E6F6] bg-[#FFF8FB] px-4 py-3">
-            <div className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#8B7BAD]">
+            <div className="text-[11px] font-bold uppercase tracking-widest text-[#8B7BAD]">
               {eventos.length} reserva{eventos.length !== 1 ? 's' : ''} em {MESES[mes - 1]}
             </div>
             <div className="mt-2 flex flex-col gap-1.5">
@@ -190,7 +196,7 @@ export function MiniCalendar() {
       {/* Tooltip flutuante */}
       {tooltip && (
         <div
-          className="fixed z-50 max-w-[200px] rounded-2xl border border-[#F0E6F6] bg-white px-3 py-2 text-[12px] font-semibold text-[#2D1B4E] shadow-xl"
+          className="fixed z-50 max-w-50 rounded-2xl border border-[#F0E6F6] bg-white px-3 py-2 text-[12px] font-semibold text-[#2D1B4E] shadow-xl"
           style={{ top: tooltip.top, left: tooltip.left, pointerEvents: 'none' }}
         >
           📅 {tooltip.dia}/{mes} — {tooltip.nomes}

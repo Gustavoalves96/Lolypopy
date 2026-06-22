@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { toast } from 'sonner'
 import { Modal } from './ui/Modal.jsx'
 import { Campo } from './ui/Campo.jsx'
+import { SkeletonRows } from './ui/Skeleton.jsx'
 import { apiFetch } from '../api.js'
 
 const CATEGORIAS = [
@@ -535,16 +536,7 @@ export default function Estoque({ openNewProductKey = 0 }) {
 
         {/* LISTA DE PRODUTOS */}
         {carregando ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: 60,
-              color: "#9ca3af",
-              fontSize: 16,
-            }}
-          >
-            Carregando estoque...
-          </div>
+          <SkeletonRows />
         ) : produtosFiltrados.length === 0 ? (
           <div
             style={{

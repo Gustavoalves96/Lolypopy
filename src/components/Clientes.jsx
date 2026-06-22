@@ -3,13 +3,14 @@ import { toast } from 'sonner'
 import { CardShell } from './CardShell.jsx'
 import { Modal } from './ui/Modal.jsx'
 import { Campo, inputClass } from './ui/Campo.jsx'
+import { SkeletonRows } from './ui/Skeleton.jsx'
 import { mascaraTelefone, mascaraCpfCnpj } from '../utils/masks.js'
 import { apiFetch } from '../api.js'
 
 const FORM_VAZIO = {
   nome: '', telefone: '', email: '', cpfCnpj: '',
   endereco: '', cidade: '', nomeFilho: '',
-  dataNascimentoFilho: '', observacoes: '',
+  idadeAniversariante: '', observacoes: '',
 }
 
 function validar(form) {
@@ -66,9 +67,9 @@ export default function Clientes({ onNovoCliente }) {
       cpfCnpj:             cliente.cpfCnpj || '',
       endereco:            cliente.endereco || '',
       cidade:              cliente.cidade || '',
-      nomeFilho:           cliente.nomeFilho || '',
-      dataNascimentoFilho: cliente.dataNascimentoFilho?.split('T')[0] || '',
-      observacoes:         cliente.observacoes || '',
+      nomeFilho:            cliente.nomeFilho || '',
+      idadeAniversariante:  cliente.idadeAniversariante || '',
+      observacoes:          cliente.observacoes || '',
     })
     setErros({})
     setTentouSalvar(false)
@@ -129,7 +130,7 @@ export default function Clientes({ onNovoCliente }) {
       {/* LISTA */}
       <CardShell title={`${clientes.length} cliente${clientes.length !== 1 ? 's' : ''} cadastrado${clientes.length !== 1 ? 's' : ''}`}>
         {carregando ? (
-          <div className="px-5 py-10 text-center text-sm text-[#8B7BAD]">Carregando clientes...</div>
+          <SkeletonRows />
         ) : clientes.length === 0 ? (
           <div className="px-5 py-10 text-center">
             <div className="text-4xl">👪</div>
@@ -164,9 +165,9 @@ export default function Clientes({ onNovoCliente }) {
                     {cliente.cidade && <span>📍 {cliente.cidade}</span>}
                     {cliente.cpfCnpj && <span>🪪 {cliente.cpfCnpj}</span>}
                   </div>
-                  {cliente.dataNascimentoFilho && (
+                  {cliente.idadeAniversariante && (
                     <div className="mt-1 text-[11px] text-[#8B7BAD]">
-                      🎉 Aniversário: {new Date(cliente.dataNascimentoFilho + 'T12:00:00').toLocaleDateString('pt-BR')}
+                      🎂 Vai fazer {cliente.idadeAniversariante} anos
                     </div>
                   )}
                 </div>
@@ -231,12 +232,12 @@ export default function Clientes({ onNovoCliente }) {
               </Campo>
             </div>
 
-            <Campo label="Nome do filho(a)">
+            <Campo label="Nome do aniversariante">
               <input className={inputClass()} value={form.nomeFilho} onChange={(e) => setForm(f => ({ ...f, nomeFilho: e.target.value }))} placeholder="Ex: Sofia" />
             </Campo>
 
-            <Campo label="Data de nascimento">
-              <input className={inputClass()} type="date" value={form.dataNascimentoFilho} onChange={(e) => setForm(f => ({ ...f, dataNascimentoFilho: e.target.value }))} />
+            <Campo label="Quantos anos vai fazer">
+              <input className={inputClass()} type="number" min="1" max="18" value={form.idadeAniversariante} onChange={(e) => setForm(f => ({ ...f, idadeAniversariante: e.target.value }))} placeholder="Ex: 5" />
             </Campo>
 
             <div className="col-span-2">

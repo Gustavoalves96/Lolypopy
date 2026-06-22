@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { CardShell } from './CardShell.jsx'
 import { Modal } from './ui/Modal.jsx'
 import { Campo, inputClass } from './ui/Campo.jsx'
+import { SkeletonRows } from './ui/Skeleton.jsx'
 import { apiFetch } from '../api.js'
 
 const STATUS_CONFIG = {
@@ -155,7 +156,7 @@ export default function Contratos({ onNovoContrato }) {
       {/* LISTA */}
       <CardShell title="Contratos" icon="📄">
         {carregando ? (
-          <div className="px-5 py-10 text-center text-sm text-[#8B7BAD]">Carregando contratos...</div>
+          <SkeletonRows />
         ) : contratos.length === 0 ? (
           <div className="px-5 py-10 text-center">
             <div className="text-4xl">📄</div>
