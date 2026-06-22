@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
+import { toast } from 'sonner'
 import { CardShell } from './CardShell.jsx'
+import { Modal } from './ui/Modal.jsx'
+import { Campo, inputClass } from './ui/Campo.jsx'
 import { apiFetch } from '../api.js'
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
@@ -45,42 +48,6 @@ const fmt = (v) =>
   Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
 // ─── Sub-componentes ──────────────────────────────────────────────────────────
-
-function Modal({ titulo, onClose, children }) {
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div className="w-full max-w-lg overflow-hidden rounded-[28px] bg-white shadow-[0_20px_60px_rgba(45,27,78,0.18)]">
-        <div className="flex items-center justify-between border-b border-[#F0E6F6] px-6 py-4">
-          <h3
-            className="text-[16px] font-bold text-[#2D1B4E]"
-            style={{ fontFamily: '"Baloo 2", cursive' }}
-          >
-            {titulo}
-          </h3>
-          <button onClick={onClose} className="text-xl text-[#8B7BAD] hover:text-[#2D1B4E]">
-            ×
-          </button>
-        </div>
-        <div className="max-h-[80vh] overflow-y-auto px-6 py-5">{children}</div>
-      </div>
-    </div>
-  )
-}
-
-function Campo({ label, children }) {
-  return (
-    <div className="mb-4">
-      <label className="mb-1.5 block text-[13px] font-semibold text-[#2D1B4E]">{label}</label>
-      {children}
-    </div>
-  )
-}
-
-const inputClass =
-  'w-full rounded-2xl border border-[#F0E6F6] bg-[#FFF8FB] px-4 py-2.5 text-sm text-[#2D1B4E] outline-none transition focus:border-[#9B5DE5] focus:ring-2 focus:ring-[#9B5DE5]/20'
 
 function KpiBox({ icon, label, value, sub, tone }) {
   const tones = {
@@ -197,8 +164,9 @@ export default function Financeiro({ onNovoLancamento }) {
       if (!res.ok) throw new Error()
       await carregar()
       setModalAberto(false)
+      toast.success(lancamentoSelecionado ? 'Lançamento atualizado!' : 'Lançamento criado!')
     } catch {
-      alert('Erro ao salvar lançamento.')
+      toast.error('Erro ao salvar lançamento.')
     } finally {
       setSalvando(false)
     }
@@ -215,8 +183,9 @@ export default function Financeiro({ onNovoLancamento }) {
         }),
       })
       await carregar()
+      toast.success('Lançamento marcado como pago!')
     } catch {
-      alert('Erro ao atualizar lançamento.')
+      toast.error('Erro ao atualizar lançamento.')
     }
   }
 
@@ -225,8 +194,9 @@ export default function Financeiro({ onNovoLancamento }) {
       await apiFetch(`/financeiro/lancamentos/${id}`, { method: 'DELETE' })
       await carregar()
       setConfirmandoDeletar(null)
+      toast.success('Lançamento removido.')
     } catch {
-      alert('Erro ao remover lançamento.')
+      toast.error('Erro ao remover lançamento.')
     }
   }
 
@@ -459,7 +429,7 @@ export default function Financeiro({ onNovoLancamento }) {
           <div className="grid grid-cols-2 gap-x-4">
             <Campo label="Tipo *">
               <select
-                className={inputClass}
+                className={inputClass()}
                 value={form.tipo}
                 onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value }))}
               >
@@ -470,7 +440,7 @@ export default function Financeiro({ onNovoLancamento }) {
 
             <Campo label="Status *">
               <select
-                className={inputClass}
+                className={inputClass()}
                 value={form.status}
                 onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
               >
@@ -482,7 +452,7 @@ export default function Financeiro({ onNovoLancamento }) {
 
             <Campo label="Categoria">
               <select
-                className={inputClass}
+                className={inputClass()}
                 value={form.categoria}
                 onChange={(e) => setForm((f) => ({ ...f, categoria: e.target.value }))}
               >
@@ -496,7 +466,7 @@ export default function Financeiro({ onNovoLancamento }) {
 
             <Campo label="Valor (R$) *">
               <input
-                className={inputClass}
+                className={inputClass()}
                 type="number"
                 min="0"
                 step="0.01"
@@ -510,7 +480,7 @@ export default function Financeiro({ onNovoLancamento }) {
             <div className="col-span-2">
               <Campo label="Descrição">
                 <input
-                  className={inputClass}
+                  className={inputClass()}
                   value={form.descricao}
                   onChange={(e) => setForm((f) => ({ ...f, descricao: e.target.value }))}
                   placeholder="Ex: Sinal festa da Sofia"
@@ -520,7 +490,7 @@ export default function Financeiro({ onNovoLancamento }) {
 
             <Campo label="Data de vencimento *">
               <input
-                className={inputClass}
+                className={inputClass()}
                 type="date"
                 value={form.dataVencimento}
                 onChange={(e) => setForm((f) => ({ ...f, dataVencimento: e.target.value }))}
@@ -529,7 +499,7 @@ export default function Financeiro({ onNovoLancamento }) {
 
             <Campo label="Data de pagamento">
               <input
-                className={inputClass}
+                className={inputClass()}
                 type="date"
                 value={form.dataPagamento}
                 onChange={(e) => setForm((f) => ({ ...f, dataPagamento: e.target.value }))}
@@ -539,7 +509,7 @@ export default function Financeiro({ onNovoLancamento }) {
             <div className="col-span-2">
               <Campo label="Cliente">
                 <select
-                  className={inputClass}
+                  className={inputClass()}
                   value={form.clienteId}
                   onChange={(e) => setForm((f) => ({ ...f, clienteId: e.target.value }))}
                 >
@@ -556,7 +526,7 @@ export default function Financeiro({ onNovoLancamento }) {
             <div className="col-span-2">
               <Campo label="Vincular a evento">
                 <select
-                  className={inputClass}
+                  className={inputClass()}
                   value={form.eventoId}
                   onChange={(e) => setForm((f) => ({ ...f, eventoId: e.target.value }))}
                 >
@@ -574,7 +544,7 @@ export default function Financeiro({ onNovoLancamento }) {
             <div className="col-span-2">
               <Campo label="Observações">
                 <textarea
-                  className={`${inputClass} resize-none`}
+                  className={`${inputClass()} resize-none`}
                   rows={2}
                   value={form.observacoes}
                   onChange={(e) => setForm((f) => ({ ...f, observacoes: e.target.value }))}

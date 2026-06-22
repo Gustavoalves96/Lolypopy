@@ -1,13 +1,10 @@
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { CardShell } from './CardShell.jsx'
+import { Modal } from './ui/Modal.jsx'
+import { Campo, inputClass } from './ui/Campo.jsx'
+import { mascaraTelefone } from '../utils/masks.js'
 import { apiFetch } from '../api.js'
-
-// ─── Máscaras ──────────────────────────────────────────────────────────────
-function mascaraTelefone(v) {
-  v = v.replace(/\D/g, '').slice(0, 11)
-  if (v.length <= 10) return v.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '')
-  return v.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '')
-}
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 const fmt = (v) => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -39,32 +36,6 @@ function validarCliente(form) {
 }
 
 // ─── Sub-componentes ───────────────────────────────────────────────────────
-function Modal({ titulo, onClose, children }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-2xl overflow-hidden rounded-[28px] bg-white shadow-[0_20px_60px_rgba(45,27,78,0.18)]">
-        <div className="flex items-center justify-between border-b border-[#F0E6F6] px-6 py-4">
-          <h3 className="text-[16px] font-bold text-[#2D1B4E]" style={{ fontFamily: '"Baloo 2", cursive' }}>{titulo}</h3>
-          <button onClick={onClose} className="text-xl text-[#8B7BAD] hover:text-[#2D1B4E]">×</button>
-        </div>
-        <div className="max-h-[85vh] overflow-y-auto px-6 py-5">{children}</div>
-      </div>
-    </div>
-  )
-}
-
-function Campo({ label, obrigatorio, erro, children }) {
-  return (
-    <div className="mb-4">
-      <label className="mb-1.5 flex items-center gap-1 text-[13px] font-semibold text-[#2D1B4E]">
-        {label}{obrigatorio && <span className="text-[#EF476F]">*</span>}
-      </label>
-      {children}
-      {erro && <p className="mt-1 text-[11px] font-semibold text-[#EF476F]">{erro}</p>}
-    </div>
-  )
-}
-
 function Secao({ titulo, icon }) {
   return (
     <div className="col-span-2 mb-1 mt-2 flex items-center gap-2 border-b border-[#F0E6F6] pb-2">
@@ -73,9 +44,6 @@ function Secao({ titulo, icon }) {
     </div>
   )
 }
-
-const inputClass = (erro) =>
-  `w-full rounded-2xl border ${erro ? 'border-[#EF476F] bg-[#FFF5F7]' : 'border-[#F0E6F6] bg-[#FFF8FB]'} px-4 py-2.5 text-sm text-[#2D1B4E] outline-none transition focus:border-[#9B5DE5] focus:ring-2 focus:ring-[#9B5DE5]/20`
 
 const FORM_RESERVA_VAZIO = {
   clienteId: '', data: '', horario: '', temaFesta: '',
@@ -251,7 +219,8 @@ export default function Reservas({ onNovaReserva }) {
       setNovoClienteAberto(false)
       setFormCliente(FORM_CLIENTE_VAZIO)
       setTentouSalvarCliente(false)
-    } catch { alert('Erro ao cadastrar cliente.') }
+      toast.success('Cliente cadastrado!')
+    } catch { toast.error('Erro ao cadastrar cliente.') }
     finally  { setSalvandoCliente(false) }
   }
 
@@ -282,7 +251,8 @@ export default function Reservas({ onNovaReserva }) {
       if (!res.ok) throw new Error()
       await carregar()
       setModalAberto(false)
-    } catch { alert('Erro ao salvar reserva.') }
+      toast.success(eventoSelecionado ? 'Reserva atualizada!' : 'Reserva criada!')
+    } catch { toast.error('Erro ao salvar reserva.') }
     finally  { setSalvando(false) }
   }
 
@@ -291,7 +261,8 @@ export default function Reservas({ onNovaReserva }) {
       await apiFetch(`/eventos/${id}`, { method: 'DELETE' })
       await carregar()
       setConfirmandoDeletar(null)
-    } catch { alert('Erro ao remover reserva.') }
+      toast.success('Reserva removida.')
+    } catch { toast.error('Erro ao remover reserva.') }
   }
 
   const navegarMes = (dir) => {
@@ -397,7 +368,7 @@ export default function Reservas({ onNovaReserva }) {
 
       {/* MODAL — RESERVA */}
       {modalAberto && (
-        <Modal titulo={eventoSelecionado ? 'Editar Reserva' : 'Nova Reserva'} onClose={() => setModalAberto(false)}>
+        <Modal titulo={eventoSelecionado ? 'Editar Reserva' : 'Nova Reserva'} onClose={() => setModalAberto(false)} maxWidth="max-w-2xl">
           <div className="grid grid-cols-2 gap-x-4">
 
             <Secao titulo="Dados da festa" icon="🎉" />

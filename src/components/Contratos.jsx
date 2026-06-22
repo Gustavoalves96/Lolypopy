@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
+import { toast } from 'sonner'
 import { CardShell } from './CardShell.jsx'
+import { Modal } from './ui/Modal.jsx'
+import { Campo, inputClass } from './ui/Campo.jsx'
 import { apiFetch } from '../api.js'
 
 const STATUS_CONFIG = {
@@ -11,32 +14,6 @@ const STATUS_CONFIG = {
 const FORM_VAZIO = {
   clienteId: '', data: '', valor: '', status: 'pendente', observacoes: '',
 }
-
-function Modal({ titulo, onClose, children }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-lg overflow-hidden rounded-[28px] bg-white shadow-[0_20px_60px_rgba(45,27,78,0.18)]">
-        <div className="flex items-center justify-between border-b border-[#F0E6F6] px-6 py-4">
-          <h3 className="text-[16px] font-bold text-[#2D1B4E]" style={{ fontFamily: '"Baloo 2", cursive' }}>{titulo}</h3>
-          <button onClick={onClose} className="text-xl text-[#8B7BAD] hover:text-[#2D1B4E]">×</button>
-        </div>
-        <div className="max-h-[80vh] overflow-y-auto px-6 py-5">{children}</div>
-      </div>
-    </div>
-  )
-}
-
-function Campo({ label, children }) {
-  return (
-    <div className="mb-4">
-      <label className="mb-1.5 block text-[13px] font-semibold text-[#2D1B4E]">{label}</label>
-      {children}
-    </div>
-  )
-}
-
-const inputClass = 'w-full rounded-2xl border border-[#F0E6F6] bg-[#FFF8FB] px-4 py-2.5 text-sm text-[#2D1B4E] outline-none transition focus:border-[#9B5DE5] focus:ring-2 focus:ring-[#9B5DE5]/20'
 
 export default function Contratos({ onNovoContrato }) {
   const [contratos, setContratos] = useState([])
@@ -124,8 +101,9 @@ export default function Contratos({ onNovoContrato }) {
 
       await carregar()
       setModalAberto(false)
+      toast.success(contratoSelecionado ? 'Contrato atualizado!' : 'Contrato criado!')
     } catch (e) {
-      alert(e.message || 'Erro ao salvar contrato.')
+      toast.error(e.message || 'Erro ao salvar contrato.')
     } finally {
       setSalvando(false)
     }
@@ -136,7 +114,8 @@ export default function Contratos({ onNovoContrato }) {
       await apiFetch(`/contratos/${id}`, { method: 'DELETE' })
       await carregar()
       setConfirmandoDeletar(null)
-    } catch { alert('Erro ao remover contrato.') }
+      toast.success('Contrato removido.')
+    } catch { toast.error('Erro ao remover contrato.') }
   }
 
   // Cálculos separados por status
@@ -226,7 +205,7 @@ export default function Contratos({ onNovoContrato }) {
             <div className="col-span-2">
               <Campo label="Cliente *">
                 <select
-                  className={`${inputClass} ${!form.clienteId ? 'border-[#f59e0b]' : ''}`}
+                  className={`${inputClass()} ${!form.clienteId ? 'border-[#f59e0b]' : ''}`}
                   value={form.clienteId}
                   onChange={e => setForm(f => ({ ...f, clienteId: e.target.value }))}
                 >
@@ -239,13 +218,13 @@ export default function Contratos({ onNovoContrato }) {
               </Campo>
             </div>
             <Campo label="Data *">
-              <input className={inputClass} type="date" value={form.data} onChange={e => setForm(f => ({ ...f, data: e.target.value }))} />
+              <input className={inputClass()} type="date" value={form.data} onChange={e => setForm(f => ({ ...f, data: e.target.value }))} />
             </Campo>
             <Campo label="Valor (R$) *">
-              <input className={inputClass} type="number" min="0" step="0.01" value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))} placeholder="0,00" />
+              <input className={inputClass()} type="number" min="0" step="0.01" value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))} placeholder="0,00" />
             </Campo>
             <Campo label="Status">
-              <select className={inputClass} value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}>
+              <select className={inputClass()} value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}>
                 <option value="pendente">Pendente</option>
                 <option value="assinado">Assinado</option>
                 <option value="cancelado">Cancelado</option>
@@ -254,7 +233,7 @@ export default function Contratos({ onNovoContrato }) {
             <div />
             <div className="col-span-2">
               <Campo label="Observações">
-                <textarea className={`${inputClass} resize-none`} rows={2} value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))} placeholder="Detalhes adicionais..." />
+                <textarea className={`${inputClass()} resize-none`} rows={2} value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))} placeholder="Detalhes adicionais..." />
               </Campo>
             </div>
 

@@ -1,51 +1,10 @@
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { CardShell } from './CardShell.jsx'
+import { Modal } from './ui/Modal.jsx'
+import { Campo, inputClass } from './ui/Campo.jsx'
+import { mascaraTelefone, mascaraCpfCnpj } from '../utils/masks.js'
 import { apiFetch } from '../api.js'
-
-// ─── Máscaras ─────────────────────────────────────────────────────────────────
-function mascaraTelefone(v) {
-  v = v.replace(/\D/g, '').slice(0, 11)
-  if (v.length <= 10) return v.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '')
-  return v.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '')
-}
-
-function mascaraCpfCnpj(v) {
-  v = v.replace(/\D/g, '').slice(0, 14)
-  if (v.length <= 11)
-    return v.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, '$1.$2.$3-$4').replace(/-$/, '').replace(/\.+$/, '')
-  return v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, '$1.$2.$3/$4-$5').replace(/-$/, '').replace(/\/+$/, '')
-}
-
-// ─── Componentes base ─────────────────────────────────────────────────────────
-function Modal({ titulo, onClose, children }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-lg overflow-hidden rounded-[28px] bg-white shadow-[0_20px_60px_rgba(45,27,78,0.18)]">
-        <div className="flex items-center justify-between border-b border-[#F0E6F6] px-6 py-4">
-          <h3 className="text-[16px] font-bold text-[#2D1B4E]" style={{ fontFamily: '"Baloo 2", cursive' }}>{titulo}</h3>
-          <button onClick={onClose} className="text-xl text-[#8B7BAD] hover:text-[#2D1B4E]">×</button>
-        </div>
-        <div className="max-h-[80vh] overflow-y-auto px-6 py-5">{children}</div>
-      </div>
-    </div>
-  )
-}
-
-function Campo({ label, obrigatorio, erro, children }) {
-  return (
-    <div className="mb-4">
-      <label className="mb-1.5 flex items-center gap-1 text-[13px] font-semibold text-[#2D1B4E]">
-        {label}
-        {obrigatorio && <span className="text-[#EF476F]">*</span>}
-      </label>
-      {children}
-      {erro && <p className="mt-1 text-[11px] font-semibold text-[#EF476F]">{erro}</p>}
-    </div>
-  )
-}
-
-const inputClass = (erro) =>
-  `w-full rounded-2xl border ${erro ? 'border-[#EF476F] bg-[#FFF5F7]' : 'border-[#F0E6F6] bg-[#FFF8FB]'} px-4 py-2.5 text-sm text-[#2D1B4E] outline-none transition focus:border-[#9B5DE5] focus:ring-2 focus:ring-[#9B5DE5]/20`
 
 const FORM_VAZIO = {
   nome: '', telefone: '', email: '', cpfCnpj: '',
@@ -134,7 +93,8 @@ export default function Clientes({ onNovoCliente }) {
       if (!res.ok) throw new Error()
       await carregar()
       setModalAberto(false)
-    } catch { alert('Erro ao salvar cliente.') }
+      toast.success(clienteSelecionado ? 'Cliente atualizado!' : 'Cliente cadastrado!')
+    } catch { toast.error('Erro ao salvar cliente.') }
     finally  { setSalvando(false) }
   }
 
@@ -143,7 +103,8 @@ export default function Clientes({ onNovoCliente }) {
       await apiFetch(`/clientes/${id}`, { method: 'DELETE' })
       await carregar()
       setConfirmandoDeletar(null)
-    } catch { alert('Erro ao remover cliente.') }
+      toast.success('Cliente removido.')
+    } catch { toast.error('Erro ao remover cliente.') }
   }
 
   const inicial    = (nome) => nome?.charAt(0).toUpperCase() ?? '?'
@@ -295,7 +256,7 @@ export default function Clientes({ onNovoCliente }) {
             <button onClick={() => setModalAberto(false)} className="flex-1 rounded-2xl border border-[#F0E6F6] py-2.5 text-sm font-bold text-[#8B7BAD] transition hover:bg-[#FFF8FB]">
               Cancelar
             </button>
-            <button onClick={salvar} disabled={salvando} className="flex-[2] rounded-2xl bg-[#9B5DE5] py-2.5 text-sm font-bold text-white shadow-lg shadow-[#9B5DE5]/20 transition hover:bg-[#864fe1] disabled:opacity-50">
+            <button onClick={salvar} disabled={salvando} className="flex-2 rounded-2xl bg-[#9B5DE5] py-2.5 text-sm font-bold text-white shadow-lg shadow-[#9B5DE5]/20 transition hover:bg-[#864fe1] disabled:opacity-50">
               {salvando ? 'Salvando...' : clienteSelecionado ? 'Salvar alterações' : 'Cadastrar cliente'}
             </button>
           </div>
@@ -310,7 +271,7 @@ export default function Clientes({ onNovoCliente }) {
           </p>
           <div className="mt-5 flex gap-3">
             <button onClick={() => setConfirmandoDeletar(null)} className="flex-1 rounded-2xl border border-[#F0E6F6] py-2.5 text-sm font-bold text-[#8B7BAD] transition hover:bg-[#FFF8FB]">Cancelar</button>
-            <button onClick={() => deletar(confirmandoDeletar.id)} className="flex-[2] rounded-2xl bg-[#EF476F] py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-[#d63860]">Sim, remover</button>
+            <button onClick={() => deletar(confirmandoDeletar.id)} className="flex-2 rounded-2xl bg-[#EF476F] py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-[#d63860]">Sim, remover</button>
           </div>
         </Modal>
       )}

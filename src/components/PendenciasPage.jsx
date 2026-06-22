@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { CardShell } from './CardShell.jsx'
 import { apiFetch } from '../api.js'
 
@@ -49,8 +50,9 @@ export default function PendenciasPage({ onVerFinanceiro }) {
         }),
       })
       await carregar()
+      toast.success('Lançamento marcado como pago!')
     } catch {
-      alert('Erro ao atualizar lançamento.')
+      toast.error('Erro ao atualizar lançamento.')
     } finally {
       setMarcando(null)
     }

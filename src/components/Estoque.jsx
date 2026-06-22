@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import { toast } from 'sonner'
+import { Modal } from './ui/Modal.jsx'
+import { Campo } from './ui/Campo.jsx'
 import { apiFetch } from '../api.js'
 
 const CATEGORIAS = [
@@ -72,82 +75,6 @@ function StatusEstoque({ atual, minimo }) {
       >
         {critico ? "⚠ Crítico" : baixo ? "↓ Baixo" : "✓ OK"}
       </div>
-    </div>
-  );
-}
-
-function Modal({ titulo, onClose, children }) {
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.45)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-        padding: 16,
-      }}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 16,
-          width: "100%",
-          maxWidth: 480,
-          boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            padding: "20px 24px",
-            borderBottom: "1px solid #f3f4f6",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#111" }}>
-            {titulo}
-          </h3>
-          <button
-            onClick={onClose}
-            style={{
-              background: "none",
-              border: "none",
-              fontSize: 20,
-              cursor: "pointer",
-              color: "#6b7280",
-              padding: "0 4px",
-            }}
-          >
-            ×
-          </button>
-        </div>
-        <div style={{ padding: 24 }}>{children}</div>
-      </div>
-    </div>
-  );
-}
-
-function Campo({ label, children }) {
-  return (
-    <div style={{ marginBottom: 16 }}>
-      <label
-        style={{
-          display: "block",
-          fontSize: 13,
-          fontWeight: 600,
-          color: "#374151",
-          marginBottom: 6,
-        }}
-      >
-        {label}
-      </label>
-      {children}
     </div>
   );
 }
@@ -292,8 +219,9 @@ export default function Estoque({ openNewProductKey = 0 }) {
       if (!res.ok) throw new Error();
       await carregarProdutos();
       setModalNovo(false);
+      toast.success('Produto salvo!')
     } catch {
-      alert("Erro ao salvar produto. Tente novamente.");
+      toast.error('Erro ao salvar produto. Tente novamente.')
     } finally {
       setSalvando(false);
     }
@@ -338,8 +266,9 @@ export default function Estoque({ openNewProductKey = 0 }) {
       if (!res.ok) throw new Error(await res.text());
       await carregarProdutos();
       setModalMovimentacao(null);
+      toast.success('Movimentação registrada!')
     } catch (e) {
-      alert("Erro: " + e.message);
+      toast.error('Erro: ' + e.message)
     } finally {
       setSalvando(false);
     }
@@ -356,8 +285,9 @@ export default function Estoque({ openNewProductKey = 0 }) {
       if (!res.ok) throw new Error();
       await carregarProdutos();
       setConfirmandoExcluir(null);
+      toast.success('Produto removido.')
     } catch {
-      alert("Erro ao excluir produto.");
+      toast.error('Erro ao excluir produto.')
     }
   }
 

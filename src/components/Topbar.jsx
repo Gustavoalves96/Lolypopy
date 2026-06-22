@@ -1,4 +1,4 @@
-export function Topbar({ title, subtitle, ctaLabel, onCtaClick }) {
+export function Topbar({ title, subtitle, ctaLabel, onCtaClick, onLogout }) {
   return (
     <header className="sticky top-0 z-10 border-b border-[#F0E6F6] bg-white/85 px-5 py-4 backdrop-blur-xl lg:px-7">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -34,6 +34,16 @@ export function Topbar({ title, subtitle, ctaLabel, onCtaClick }) {
           <div className="grid h-10 w-10 place-items-center rounded-full bg-linear-to-br from-[#FF6B9D] to-[#9B5DE5] text-sm font-extrabold text-white shadow-lg shadow-[#9B5DE5]/20">
             A
           </div>
+
+          <button
+            type="button"
+            onClick={onLogout}
+            title="Sair"
+            className="grid h-10 w-10 place-items-center rounded-2xl border border-[#F0E6F6] bg-[#FFF8FB] text-[17px] text-[#8B7BAD] transition hover:border-[#FFE8F1] hover:bg-[#FFE8F1] hover:text-[#C9365A]"
+            aria-label="Sair"
+          >
+            ↩
+          </button>
         </div>
       </div>
     </header>

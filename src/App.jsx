@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
+import { Toaster } from 'sonner'
 import Login from './components/Login.jsx'
-import { isLogged, apiFetch } from './api.js'
+import { isLogged, apiFetch, clearToken } from './api.js'
 import { Sidebar } from './components/Sidebar.jsx'
 import { Topbar } from './components/Topbar.jsx'
 import { KpiCard } from './components/KpiCard.jsx'
@@ -194,6 +195,12 @@ export default function App() {
 
 	const goTo = (view) => setActiveView(view)
 
+	const handleLogout = () => {
+		clearToken()
+		setAuthenticated(false)
+		setActiveView('Tela inicial')
+	}
+
 	const handleCtaClick = () => {
 		if (['Estoque', 'Clientes', 'Reservas', 'Contratos', 'Financeiro'].includes(activeView)) {
 			setCtaKey((k) => k + 1)
@@ -206,10 +213,11 @@ export default function App() {
 
 	return (
 		<div className="flex min-h-screen flex-col bg-[linear-gradient(180deg,#FFF8FB_0%,#FFFDFE_100%)] text-[#2D1B4E] lg:flex-row">
+			<Toaster position="top-right" richColors />
 			<Sidebar sections={activeSections} activeItem={activeView} onSelect={goTo} />
 
 			<main className="flex min-w-0 flex-1 flex-col">
-				<Topbar title={meta.title} subtitle={meta.subtitle} ctaLabel={meta.ctaLabel} onCtaClick={handleCtaClick} />
+				<Topbar title={meta.title} subtitle={meta.subtitle} ctaLabel={meta.ctaLabel} onCtaClick={handleCtaClick} onLogout={handleLogout} />
 
 				<div className="flex-1 overflow-y-auto px-5 py-6 lg:px-7">
 					{activeView === 'Tela inicial' ? (
