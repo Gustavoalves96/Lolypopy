@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Toaster } from 'sonner'
+import { useState, useEffect, lazy, Suspense } from 'react'
+import { Toaster, toast } from 'sonner'
 import Login from './components/Login.jsx'
 import { isLogged, apiFetch, clearToken } from './api.js'
 import { Sidebar } from './components/Sidebar.jsx'
@@ -10,13 +10,17 @@ import { Pendencias } from './components/Pendencias.jsx'
 import { MiniCalendar } from './components/MiniCalendar.jsx'
 import { RecentActivity } from './components/RecentActivity.jsx'
 import { CardShell } from './components/CardShell.jsx'
-import Estoque from './components/Estoque.jsx'
-import Clientes from './components/Clientes.jsx'
-import Reservas from './components/Reservas.jsx'
-import Contratos from './components/Contratos.jsx'
-import Financeiro from './components/Financeiro.jsx'
-import Buffets from './components/Buffets.jsx'
-import Relatorios from './components/Relatorios.jsx'
+import { SkeletonRows } from './components/ui/Skeleton.jsx'
+
+// Páginas carregadas sob demanda (code-splitting) — reduz o bundle inicial.
+// Em especial, isola o recharts (usado só em Relatórios) do carregamento inicial.
+const Estoque = lazy(() => import('./components/Estoque.jsx'))
+const Clientes = lazy(() => import('./components/Clientes.jsx'))
+const Reservas = lazy(() => import('./components/Reservas.jsx'))
+const Contratos = lazy(() => import('./components/Contratos.jsx'))
+const Financeiro = lazy(() => import('./components/Financeiro.jsx'))
+const Buffets = lazy(() => import('./components/Buffets.jsx'))
+const Relatorios = lazy(() => import('./components/Relatorios.jsx'))
 
 const sidebarSections = [
 	{
@@ -75,9 +79,16 @@ export default function App() {
 
 	const meta = screenMeta[activeView] ?? screenMeta['Tela inicial']
 
+	// Desloga automaticamente quando a API responde 401 (token expirado/inválido).
 	useEffect(() => {
-		if (authenticated) carregarDashboard()
-	}, [authenticated])
+		function onUnauthorized() {
+			setAuthenticated(false)
+			setActiveView('Tela inicial')
+			toast.error('Sessão expirada. Faça login novamente.')
+		}
+		window.addEventListener('auth:unauthorized', onUnauthorized)
+		return () => window.removeEventListener('auth:unauthorized', onUnauthorized)
+	}, [])
 
 	async function carregarDashboard() {
 		try {
@@ -191,6 +202,10 @@ export default function App() {
 		}
 	}
 
+	useEffect(() => {
+		if (authenticated) carregarDashboard()
+	}, [authenticated])
+
 	const activeSections = sidebarSections.map((s) => ({
 		...s,
 		items: s.items.map((item) => ({ ...item, active: activeView === item.label })),
@@ -232,6 +247,7 @@ export default function App() {
 				<Topbar title={meta.title} subtitle={meta.subtitle} ctaLabel={meta.ctaLabel} onCtaClick={handleCtaClick} onLogout={handleLogout} />
 
 				<div className="flex-1 overflow-y-auto px-5 py-6 lg:px-7">
+					<Suspense fallback={<div className="mx-auto w-full max-w-400"><SkeletonRows count={6} /></div>}>
 					{activeView === 'Tela inicial' ? (
 						<TelaInicialContent onOpen={goTo} kpis={kpis} upcomingEvents={upcomingEvents} pendencias={pendencias} activities={activities} onDiaCalendario={handleDiaCalendario} />
 					) : activeView === 'Estoque'    ? <Estoque openNewProductKey={ctaKey} />
@@ -242,6 +258,7 @@ export default function App() {
 					  : activeView === 'Buffets'    ? <Buffets onNovoBuffet={ctaKey} />
 					  : activeView === 'Relatórios' ? <Relatorios />
 					  : <SectionScreen view={activeView} onBack={() => goTo('Tela inicial')} onOpen={goTo} />}
+					</Suspense>
 				</div>
 			</main>
 		</div>
