@@ -1,51 +1,52 @@
 import { CardShell } from './CardShell.jsx'
+import { Icon } from './ui/Icon.jsx'
+
+// Cores da caixa de data, alternadas por linha para dar o visual do design.
+const ACCENTS = [
+  { box: 'bg-[#FFEDF2]', num: 'text-[#FB5E89]', mon: 'text-[#FB8FB0]' },
+  { box: 'bg-[#EFEAFF]', num: 'text-[#7B5CFA]', mon: 'text-[#A78FFB]' },
+  { box: 'bg-[#FFF3DC]', num: 'text-[#E8930C]', mon: 'text-[#F0B450]' },
+]
 
 export function UpcomingFestas({ events, onAction }) {
   return (
-    <CardShell title="Próximas festas" icon="📅" actionLabel="Ver todas →" onAction={onAction}>
+    <CardShell title="Próximas festas" icon={<Icon name="sparkles" size={16} className="text-[#FB5E89]" />} iconBg="bg-[#FFEDF2]" actionLabel={<span className="inline-flex items-center gap-1">Ver todas <Icon name="arrowRight" size={14} /></span>} onAction={onAction}>
       {events.length === 0 ? (
-        <div className="px-5 py-10 text-center">
-          <div className="text-3xl">📅</div>
-          <p className="mt-2 text-sm text-[#8B7BAD]">Nenhuma festa nos próximos dias.</p>
+        <div className="px-6 py-10 text-center">
+          <Icon name="calendar" size={32} className="mx-auto text-[#C4C0D8]" />
+          <p className="mt-2 text-sm text-[#8B87A6]">Nenhuma festa nos próximos dias.</p>
         </div>
       ) : (
-        <div className="divide-y divide-[#F0E6F6]">
-          {events.map((event) => (
-            <article key={event.name + event.day} className="flex items-center gap-4 px-5 py-4 transition hover:bg-[#FFF8FB]">
-              <div className="min-w-13 rounded-2xl border border-[#F0E6F6] bg-[#FFF8FB] px-2.5 py-2 text-center">
-                <div
-                  className="text-[22px] font-extrabold leading-none text-[#9B5DE5]"
-                  style={{ fontFamily: '"Baloo 2", cursive' }}
-                >
-                  {event.day}
+        <div>
+          {events.map((event, i) => {
+            const accent = ACCENTS[i % ACCENTS.length]
+            return (
+              <article key={event.name + event.day} className="flex items-center gap-[18px] border-b border-[#F6F4FC] px-6 py-4 transition last:border-0 hover:bg-[#FBFAFE]">
+                <div className={`flex h-[58px] w-[54px] shrink-0 flex-col items-center justify-center rounded-[15px] leading-none ${accent.box}`}>
+                  <span className={`text-[20px] font-extrabold ${accent.num}`}>{event.day}</span>
+                  <span className={`mt-0.5 text-[11px] font-bold uppercase tracking-[0.05em] ${accent.mon}`}>{event.month}</span>
                 </div>
-                <div className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#8B7BAD]">
-                  {event.month}
-                </div>
-              </div>
 
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[13px] font-bold text-[#2D1B4E]">{event.name}</div>
-                <div className="mt-1 text-[11px] text-[#8B7BAD]">{event.client}</div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {event.tags.map((tag) => (
-                    <span
-                      key={tag.label}
-                      className={`rounded-lg px-2.5 py-1 text-[10px] font-bold ${tag.className}`}
-                    >
-                      {tag.label}
-                    </span>
-                  ))}
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[15px] font-bold text-[#2C2752]">{event.name}</div>
+                  <div className="mt-0.5 mb-2.5 text-[13px] text-[#9A96B4]">{event.client}</div>
+                  <div className="flex flex-wrap gap-[7px]">
+                    {event.tags.map((tag) => (
+                      <span key={tag.label} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-semibold ${tag.className}`}>
+                        {tag.icon && <Icon name={tag.icon} size={13} />}
+                        {tag.label}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              <div className="shrink-0 text-right">
-                <span className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${event.status.className}`}>
+                <span className={`flex shrink-0 items-center gap-[7px] rounded-full px-3.5 py-[7px] text-[13px] font-bold ${event.status.className}`}>
+                  <span className="h-[7px] w-[7px] rounded-full bg-current" />
                   {event.status.label}
                 </span>
-              </div>
-            </article>
-          ))}
+              </article>
+            )
+          })}
         </div>
       )}
     </CardShell>

@@ -1,6 +1,14 @@
 import { Modal } from "../ui/Modal.jsx";
 import { Campo } from "../ui/Campo.jsx";
+import { Icon } from "../ui/Icon.jsx";
 import { inputStyle } from "./constants.js";
+
+const Selo = ({ tipo, children }) => (
+  <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+    <Icon name={tipo === "entrada" ? "arrowUp" : "arrowDown"} size={15} />
+    {children}
+  </span>
+);
 
 export function ModalMovimentacao({ produto, formMov, setFormMov, onClose, onConfirmar, salvando }) {
   const semQtd = !formMov.quantidade;
@@ -56,7 +64,7 @@ export function ModalMovimentacao({ produto, formMov, setFormMov, onClose, onCon
                     : "#6b7280",
               }}
             >
-              {tipo === "entrada" ? "↑ Entrada" : "↓ Saída"}
+              <Selo tipo={tipo}>{tipo === "entrada" ? "Entrada" : "Saída"}</Selo>
             </button>
           ))}
         </div>
@@ -137,11 +145,13 @@ export function ModalMovimentacao({ produto, formMov, setFormMov, onClose, onCon
             fontSize: 14,
           }}
         >
-          {salvando
-            ? "Registrando..."
-            : formMov.tipo === "entrada"
-            ? "↑ Confirmar Entrada"
-            : "↓ Confirmar Saída"}
+          {salvando ? (
+            "Registrando..."
+          ) : (
+            <Selo tipo={formMov.tipo}>
+              {formMov.tipo === "entrada" ? "Confirmar Entrada" : "Confirmar Saída"}
+            </Selo>
+          )}
         </button>
       </div>
     </Modal>

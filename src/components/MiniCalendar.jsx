@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { CardShell } from './CardShell.jsx'
+import { Icon } from './ui/Icon.jsx'
 import { apiFetch } from '../api.js'
 
 const MESES = [
@@ -65,34 +66,34 @@ export function MiniCalendar({ onDiaClick }) {
   }
 
   return (
-    <CardShell title={`Agenda de ${MESES[mes - 1].toLowerCase()}`} icon="📆" className="lg:col-span-1">
-      <div className="px-5 py-4">
+    <CardShell title={`Agenda de ${MESES[mes - 1].toLowerCase()}`} icon={<Icon name="calendar" size={16} className="text-[#7B5CFA]" />} iconBg="bg-[#EFEAFF]">
+      <div className="px-6 py-5">
 
         {/* Cabeçalho com navegação */}
-        <div className="mb-3 flex items-center justify-between gap-4">
-          <div className="text-[15px] font-bold text-[#2D1B4E]" style={{ fontFamily: '"Baloo 2", cursive' }}>
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <div className="text-[15px] font-bold text-[#2C2752]">
             {MESES[mes - 1]} {ANO}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2.5">
             <button
               type="button"
               disabled={!podirAnterior}
               onClick={() => setMes(m => m - 1)}
-              className="grid h-8 w-8 place-items-center rounded-xl border border-[#F0E6F6] bg-[#FFF8FB] text-sm text-[#2D1B4E] transition hover:bg-[#F7EEF9] disabled:opacity-30"
+              className="grid h-8 w-8 place-items-center rounded-[9px] border border-[#ECE9F6] bg-white text-[15px] text-[#615D82] transition hover:bg-[#F6F4FD] disabled:opacity-30"
             >‹</button>
             <button
               type="button"
               disabled={!podirProximo}
               onClick={() => setMes(m => m + 1)}
-              className="grid h-8 w-8 place-items-center rounded-xl border border-[#F0E6F6] bg-[#FFF8FB] text-sm text-[#2D1B4E] transition hover:bg-[#F7EEF9] disabled:opacity-30"
+              className="grid h-8 w-8 place-items-center rounded-[9px] border border-[#ECE9F6] bg-white text-[15px] text-[#615D82] transition hover:bg-[#F6F4FD] disabled:opacity-30"
             >›</button>
           </div>
         </div>
 
         {/* Dias da semana */}
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-1.5">
           {DIAS_SEMANA.map((d, i) => (
-            <div key={i} className="py-1 text-center text-[10px] font-bold uppercase tracking-[0.08em] text-[#8B7BAD]">
+            <div key={i} className="py-1 text-center text-[12px] font-bold text-[#B7B3CE]">
               {d}
             </div>
           ))}
@@ -109,16 +110,16 @@ export function MiniCalendar({ onDiaClick }) {
             const nomes = reservado ? nomesClientes(dia) : ''
             const passado = new Date(ANO, mes - 1, dia) < new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())
 
-            let cellClass = 'relative rounded-xl py-1.5 text-center text-[12px] font-semibold transition cursor-default '
+            let cellClass = 'relative flex h-10 items-center justify-center rounded-[11px] text-[14px] font-semibold transition cursor-default '
 
             if (ehHoje) {
-              cellClass += 'bg-[#9B5DE5] text-white shadow-lg shadow-[#9B5DE5]/25 '
+              cellClass += 'bg-linear-to-br from-[#9B7BFF] to-[#7B5CFA] font-extrabold text-white shadow-[0_8px_16px_-6px_rgba(123,92,250,0.6)] '
             } else if (reservado) {
-              cellClass += 'bg-[#FFE8F1] text-[#C9365A] ring-1 ring-[#EF476F]/30 cursor-pointer hover:bg-[#ffd6e4] '
+              cellClass += 'bg-[#FFEDF2] font-bold text-[#FB5E89] cursor-pointer hover:bg-[#ffdce7] '
             } else if (passado) {
-              cellClass += 'text-[#c4b8d4] '
+              cellClass += 'text-[#C4C0D8] hover:bg-[#F4F2FD] '
             } else {
-              cellClass += 'bg-[#D7FBF3] text-[#0B7A5E] hover:bg-[#bbf5e8] cursor-pointer '
+              cellClass += 'bg-[#E2F7F0] font-bold text-[#13B98A] hover:bg-[#cdf2e6] cursor-pointer '
             }
 
             const podeClicar = reservado || (!passado && !ehHoje)
@@ -142,7 +143,7 @@ export function MiniCalendar({ onDiaClick }) {
               >
                 {dia}
                 {reservado && (
-                  <span className="absolute bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#EF476F]" />
+                  <span className="absolute bottom-1.5 left-1/2 h-[5px] w-[5px] -translate-x-1/2 rounded-full bg-[#FB5E89]" />
                 )}
               </div>
             )
@@ -150,43 +151,43 @@ export function MiniCalendar({ onDiaClick }) {
         </div>
 
         {/* Legenda */}
-        <div className="mt-4 flex flex-wrap gap-4 text-[11px] font-semibold text-[#8B7BAD]">
+        <div className="mt-4 flex flex-wrap gap-4 text-[12px] font-semibold text-[#9A96B4]">
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-[#D7FBF3] ring-1 ring-[#0B7A5E]/20" />
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-[#E2F7F0] ring-1 ring-[#13B98A]/25" />
             Dia livre
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-[#FFE8F1] ring-1 ring-[#EF476F]/20" />
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-[#FFEDF2] ring-1 ring-[#FB5E89]/25" />
             Reservado
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-[#9B5DE5]" />
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-linear-to-br from-[#9B7BFF] to-[#7B5CFA]" />
             Hoje
           </span>
         </div>
 
         {/* Resumo do mês */}
         {eventos.length > 0 && (
-          <div className="mt-4 rounded-2xl border border-[#F0E6F6] bg-[#FFF8FB] px-4 py-3">
-            <div className="text-[11px] font-bold uppercase tracking-widest text-[#8B7BAD]">
+          <div className="mt-4 rounded-[14px] border border-[#ECE9F6] bg-[#FBFAFE] px-4 py-3">
+            <div className="text-[11px] font-bold uppercase tracking-widest text-[#9A96B4]">
               {eventos.length} reserva{eventos.length !== 1 ? 's' : ''} em {MESES[mes - 1]}
             </div>
             <div className="mt-2 flex flex-col gap-1.5">
               {eventos.slice(0, 3).map((ev) => (
                 <div key={ev.id} className="flex items-center gap-2 text-[12px]">
-                  <span className="font-bold text-[#C9365A]">
+                  <span className="font-bold text-[#FB5E89]">
                     {new Date(ev.data + 'T12:00:00').getDate()}/{mes}
                   </span>
-                  <span className="text-[#2D1B4E] font-semibold truncate">
+                  <span className="truncate font-semibold text-[#2C2752]">
                     {ev.cliente?.nome ?? ev.temaFesta ?? 'Reserva'}
                   </span>
                   {ev.horario && (
-                    <span className="ml-auto shrink-0 text-[#8B7BAD]">{ev.horario.slice(0,5)}</span>
+                    <span className="ml-auto shrink-0 text-[#9A96B4]">{ev.horario.slice(0,5)}</span>
                   )}
                 </div>
               ))}
               {eventos.length > 3 && (
-                <div className="text-[11px] text-[#8B7BAD]">+ {eventos.length - 3} mais...</div>
+                <div className="text-[11px] text-[#9A96B4]">+ {eventos.length - 3} mais...</div>
               )}
             </div>
           </div>
@@ -196,10 +197,10 @@ export function MiniCalendar({ onDiaClick }) {
       {/* Tooltip flutuante */}
       {tooltip && (
         <div
-          className="fixed z-50 max-w-50 rounded-2xl border border-[#F0E6F6] bg-white px-3 py-2 text-[12px] font-semibold text-[#2D1B4E] shadow-xl"
+          className="fixed z-50 flex max-w-50 items-center gap-1.5 rounded-2xl border border-[#ECE9F6] bg-white px-3 py-2 text-[12px] font-semibold text-[#2C2752] shadow-xl"
           style={{ top: tooltip.top, left: tooltip.left, pointerEvents: 'none' }}
         >
-          📅 {tooltip.dia}/{mes} — {tooltip.nomes}
+          <Icon name="calendar" size={13} className="shrink-0 text-[#7B5CFA]" /> {tooltip.dia}/{mes} — {tooltip.nomes}
         </div>
       )}
     </CardShell>

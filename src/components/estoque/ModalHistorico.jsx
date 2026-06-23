@@ -1,4 +1,5 @@
 import { Modal } from "../ui/Modal.jsx";
+import { Icon } from "../ui/Icon.jsx";
 
 export function ModalHistorico({ produto, historico, onClose }) {
   return (
@@ -29,11 +30,14 @@ export function ModalHistorico({ produto, historico, onClose }) {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 16,
                   flexShrink: 0,
                 }}
               >
-                {mov.tipo === "entrada" ? "↑" : "↓"}
+                <Icon
+                  name={mov.tipo === "entrada" ? "arrowUp" : "arrowDown"}
+                  size={16}
+                  style={{ color: mov.tipo === "entrada" ? "#16a34a" : "#dc2626" }}
+                />
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 600, fontSize: 14 }}>

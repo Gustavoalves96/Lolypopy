@@ -13,6 +13,7 @@ import { ModalNovoProduto } from "./estoque/ModalNovoProduto.jsx";
 import { ModalMovimentacao } from "./estoque/ModalMovimentacao.jsx";
 import { ModalHistorico } from "./estoque/ModalHistorico.jsx";
 import { ModalExcluir } from "./estoque/ModalExcluir.jsx";
+import { Icon } from "./ui/Icon.jsx";
 
 // ============================================================
 // COMPONENTE PRINCIPAL — orquestra estado, dados e os subcomponentes
@@ -222,11 +223,13 @@ export default function Estoque({ openNewProductKey = 0 }) {
               padding: "6px 12px",
               borderRadius: 99,
               border: "1px solid #fcd34d",
-              display: "inline-block",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
               marginBottom: 16,
             }}
           >
-            🔌 Modo demonstração — conecte a API
+            <Icon name="plug" size={14} /> Modo demonstração — conecte a API
           </div>
         )}
         <ResumoCards

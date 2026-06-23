@@ -4,6 +4,7 @@ import { CardShell } from './CardShell.jsx'
 import { Modal } from './ui/Modal.jsx'
 import { Campo } from './ui/Campo.jsx'
 import { inputClass } from './ui/inputClass.js'
+import { Icon } from './ui/Icon.jsx'
 import { SkeletonRows } from './ui/Skeleton.jsx'
 import { mascaraTelefone, mascaraCpfCnpj } from '../utils/masks.js'
 import { apiFetch } from '../api.js'
@@ -117,14 +118,17 @@ export default function Clientes({ onNovoCliente }) {
     <div className="mx-auto flex w-full max-w-300 flex-col gap-5">
 
       {/* BUSCA */}
-      <CardShell title="Clientes" icon="👪">
+      <CardShell title="Clientes" icon={<Icon name="users" size={16} className="text-[#7B5CFA]" />} iconBg="bg-[#EFEAFF]">
         <div className="px-5 py-4">
-          <input
-            className="w-full rounded-2xl border border-[#F0E6F6] bg-[#FFF8FB] px-4 py-2.5 text-sm text-[#2D1B4E] outline-none transition focus:border-[#9B5DE5] focus:ring-2 focus:ring-[#9B5DE5]/20"
-            placeholder="🔍 Buscar por nome ou telefone..."
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-          />
+          <div className="relative flex items-center">
+            <Icon name="search" size={16} className="pointer-events-none absolute left-4 text-[#8B7BAD]" />
+            <input
+              className="w-full rounded-2xl border border-[#F0E6F6] bg-[#FFF8FB] py-2.5 pl-11 pr-4 text-sm text-[#2D1B4E] outline-none transition focus:border-[#9B5DE5] focus:ring-2 focus:ring-[#9B5DE5]/20"
+              placeholder="Buscar por nome ou telefone..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+            />
+          </div>
         </div>
       </CardShell>
 
@@ -134,7 +138,7 @@ export default function Clientes({ onNovoCliente }) {
           <SkeletonRows />
         ) : clientes.length === 0 ? (
           <div className="px-5 py-10 text-center">
-            <div className="text-4xl">👪</div>
+            <Icon name="users" size={36} className="mx-auto text-[#C4C0D8]" />
             <p className="mt-3 text-sm text-[#8B7BAD]">
               {busca ? 'Nenhum cliente encontrado.' : 'Nenhum cliente cadastrado ainda.'}
             </p>
@@ -155,20 +159,20 @@ export default function Clientes({ onNovoCliente }) {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[15px] font-bold text-[#2D1B4E]">{cliente.nome}</span>
                     {cliente.nomeFilho && (
-                      <span className="rounded-full bg-[#FFE8F1] px-2.5 py-0.5 text-[11px] font-semibold text-[#C9365A]">
-                        🎂 {cliente.nomeFilho}
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#FFE8F1] px-2.5 py-0.5 text-[11px] font-semibold text-[#C9365A]">
+                        <Icon name="cake" size={12} /> {cliente.nomeFilho}
                       </span>
                     )}
                   </div>
                   <div className="mt-0.5 flex flex-wrap gap-x-4 gap-y-0.5 text-[12px] text-[#8B7BAD]">
-                    <span>📞 {cliente.telefone}</span>
-                    {cliente.email  && <span>✉️ {cliente.email}</span>}
-                    {cliente.cidade && <span>📍 {cliente.cidade}</span>}
-                    {cliente.cpfCnpj && <span>🪪 {cliente.cpfCnpj}</span>}
+                    <span className="inline-flex items-center gap-1"><Icon name="phone" size={13} /> {cliente.telefone}</span>
+                    {cliente.email  && <span className="inline-flex items-center gap-1"><Icon name="mail" size={13} /> {cliente.email}</span>}
+                    {cliente.cidade && <span className="inline-flex items-center gap-1"><Icon name="mapPin" size={13} /> {cliente.cidade}</span>}
+                    {cliente.cpfCnpj && <span className="inline-flex items-center gap-1"><Icon name="idCard" size={13} /> {cliente.cpfCnpj}</span>}
                   </div>
                   {cliente.idadeAniversariante && (
-                    <div className="mt-1 text-[11px] text-[#8B7BAD]">
-                      🎂 Vai fazer {cliente.idadeAniversariante} anos
+                    <div className="mt-1 inline-flex items-center gap-1 text-[11px] text-[#8B7BAD]">
+                      <Icon name="cake" size={13} /> Vai fazer {cliente.idadeAniversariante} anos
                     </div>
                   )}
                 </div>
@@ -249,8 +253,8 @@ export default function Clientes({ onNovoCliente }) {
           </div>
 
           {tentouSalvar && Object.keys(erros).length > 0 && (
-            <div className="mb-4 rounded-2xl bg-[#FFE8F1] px-4 py-3 text-[12px] font-semibold text-[#C9365A]">
-              ⚠️ Preencha os campos obrigatórios antes de continuar.
+            <div className="mb-4 flex items-center gap-1.5 rounded-2xl bg-[#FFE8F1] px-4 py-3 text-[12px] font-semibold text-[#C9365A]">
+              <Icon name="alert" size={14} /> Preencha os campos obrigatórios antes de continuar.
             </div>
           )}
 

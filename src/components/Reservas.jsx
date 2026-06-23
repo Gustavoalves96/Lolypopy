@@ -4,6 +4,8 @@ import { CardShell } from './CardShell.jsx'
 import { Modal } from './ui/Modal.jsx'
 import { Campo } from './ui/Campo.jsx'
 import { inputClass } from './ui/inputClass.js'
+import { ItensEditor } from './ui/ItensEditor.jsx'
+import { Icon } from './ui/Icon.jsx'
 import { SkeletonRows } from './ui/Skeleton.jsx'
 import { mascaraTelefone } from '../utils/masks.js'
 import { apiFetch } from '../api.js'
@@ -49,7 +51,7 @@ function Secao({ titulo, icon }) {
 
 const FORM_RESERVA_VAZIO = {
   clienteId: '', data: '', horario: '', temaFesta: '',
-  numeroCriancas: '', numeroPessoas: '', buffet: '',
+  numeroCriancas: '', numeroPessoas: '', buffet: '', buffetId: '', buffetItens: [],
   status: 'pendente', valorTotal: '', valorPago: '',
   parcelas: '1', observacoes: '',
 }
@@ -86,12 +88,12 @@ function PreviewFinanceiro({ valorTotal, valorPago, parcelas }) {
           <div className="text-[13px] font-extrabold text-[#2D1B4E]">{fmt(total)}</div>
         </div>
         <div className="rounded-xl bg-[#D7FBF3] px-2 py-2">
-          <div className="text-[11px] text-[#0B7A5E]">Sinal ✓</div>
+          <div className="flex items-center justify-center gap-1 text-[11px] text-[#0B7A5E]">Sinal <Icon name="check" size={11} /></div>
           <div className="text-[13px] font-extrabold text-[#0B7A5E]">{fmt(pago)}</div>
         </div>
         <div className={`rounded-xl px-2 py-2 ${restante > 0 ? 'bg-[#FFE8F1]' : 'bg-[#D7FBF3]'}`}>
-          <div className={`text-[11px] ${restante > 0 ? 'text-[#C9365A]' : 'text-[#0B7A5E]'}`}>
-            {restante > 0 ? 'Restante ⚠️' : 'Quitado 🎉'}
+          <div className={`flex items-center justify-center gap-1 text-[11px] ${restante > 0 ? 'text-[#C9365A]' : 'text-[#0B7A5E]'}`}>
+            {restante > 0 ? <>Restante <Icon name="alert" size={11} /></> : <>Quitado <Icon name="sparkles" size={11} /></>}
           </div>
           <div className={`text-[13px] font-extrabold ${restante > 0 ? 'text-[#C9365A]' : 'text-[#0B7A5E]'}`}>
             {fmt(restante > 0 ? restante : 0)}
@@ -101,8 +103,8 @@ function PreviewFinanceiro({ valorTotal, valorPago, parcelas }) {
 
       {nParcelas > 1 && restante > 0 && (
         <div className="mt-3 rounded-xl bg-[#FFF5D6] px-3 py-2.5">
-          <div className="mb-1.5 text-[11px] font-bold text-[#A07800]">
-            📅 {nParcelas}x de {fmt(valorParc)}{pago > 0 ? ' — começa no mês seguinte à festa' : ' — começa no mês da festa'}
+          <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-[#A07800]">
+            <Icon name="calendar" size={13} className="shrink-0" /> {nParcelas}x de {fmt(valorParc)}{pago > 0 ? ' — começa no mês seguinte à festa' : ' — começa no mês da festa'}
           </div>
           <div className="flex flex-wrap gap-1.5">
             {Array.from({ length: nParcelas }).map((_, i) => (
@@ -116,8 +118,9 @@ function PreviewFinanceiro({ valorTotal, valorPago, parcelas }) {
         </div>
       )}
 
-      <div className="mt-3 rounded-xl bg-[#EEE4FF] px-3 py-2 text-[11px] text-[#6B35C1]">
-        💡 {nParcelas === 1
+      <div className="mt-3 flex items-start gap-1.5 rounded-xl bg-[#EEE4FF] px-3 py-2 text-[11px] text-[#6B35C1]">
+        <Icon name="lightbulb" size={13} className="mt-0.5 shrink-0" />
+        {nParcelas === 1
           ? pago > 0 && restante > 0 ? `Sinal de ${fmt(pago)} + saldo de ${fmt(restante)} à vista.`
           : pago > 0 && restante <= 0 ? `Pagamento completo de ${fmt(total)}.`
           : `Será cobrado ${fmt(total)} à vista.`
@@ -133,6 +136,7 @@ export default function Reservas({ onNovaReserva, acaoCalendario }) {
   const [ano, setAno]       = useState(new Date().getFullYear())
   const [eventos, setEventos]   = useState([])
   const [clientes, setClientes] = useState([])
+  const [buffets, setBuffets]   = useState([])
   const [carregando, setCarregando] = useState(true)
 
   const [modalAberto, setModalAberto]       = useState(false)
@@ -154,12 +158,14 @@ export default function Reservas({ onNovaReserva, acaoCalendario }) {
   async function carregar() {
     try {
       setCarregando(true)
-      const [rEv, rCl] = await Promise.all([
+      const [rEv, rCl, rBf] = await Promise.all([
         apiFetch(`/eventos?mes=${mes}&ano=${ano}`),
         apiFetch(`/clientes`),
+        apiFetch(`/buffets`),
       ])
       setEventos(rEv.ok ? await rEv.json() : [])
       setClientes(rCl.ok ? await rCl.json() : [])
+      setBuffets(rBf.ok ? await rBf.json() : [])
     } catch { setEventos([]) }
     finally  { setCarregando(false) }
   }
@@ -205,6 +211,8 @@ export default function Reservas({ onNovaReserva, acaoCalendario }) {
       numeroCriancas: evento.numeroCriancas || '',
       numeroPessoas:  evento.numeroPessoas || '',
       buffet:         evento.buffet || '',
+      buffetId:       evento.buffetId || '',
+      buffetItens:    evento.buffetItens || [],
       status:         evento.status || 'pendente',
       valorTotal:     evento.valorTotal || '',
       valorPago:      evento.valorPago || '',
@@ -259,6 +267,10 @@ export default function Reservas({ onNovaReserva, acaoCalendario }) {
         valorTotal:     form.valorTotal      ? Number(form.valorTotal)     : 0,
         valorPago:      form.valorPago       ? Number(form.valorPago)      : 0,
         parcelas:       form.parcelas        ? Number(form.parcelas)       : 1,
+        buffetId:       form.buffetId        ? Number(form.buffetId)       : null,
+        buffetItens: (form.buffetItens ?? [])
+          .map(it => ({ nome: (it.nome ?? '').trim(), quantidade: (it.quantidade ?? '').trim() }))
+          .filter(it => it.nome),
       }
       const url    = eventoSelecionado ? `/eventos/${eventoSelecionado.id}` : `/eventos`
       const method = eventoSelecionado ? 'PATCH' : 'POST'
@@ -291,17 +303,38 @@ export default function Reservas({ onNovaReserva, acaoCalendario }) {
     setMes(novoMes); setAno(novoAno)
   }
 
+  // Ao escolher um buffet: guarda id + nome e copia os itens do modelo para a
+  // reserva (editáveis por festa). Pré-preenche o valor total se ainda vazio.
+  function selecionarBuffet(buffetId) {
+    if (!buffetId) {
+      setForm(f => ({ ...f, buffetId: '', buffet: '', buffetItens: [] }))
+      return
+    }
+    const b = buffets.find(x => String(x.id) === String(buffetId))
+    if (!b) return
+    setForm(f => ({
+      ...f,
+      buffetId: b.id,
+      buffet: b.nome,
+      buffetItens: (b.itens ?? []).map(it => ({ ...it })),
+      valorTotal: (!f.valorTotal || Number(f.valorTotal) === 0) && Number(b.preco) > 0
+        ? String(b.preco)
+        : f.valorTotal,
+    }))
+  }
+
   const clienteSelecionado = clientes.find(c => String(c.id) === String(form.clienteId))
+  const buffetSelecionado  = buffets.find(b => String(b.id) === String(form.buffetId))
 
   return (
     <div className="mx-auto flex w-full max-w-300 flex-col gap-5">
 
       {/* NAVEGAÇÃO MÊS */}
-      <CardShell title="Reservas" icon="📅">
+      <CardShell title="Reservas" icon={<Icon name="calendar" size={16} className="text-[#7B5CFA]" />} iconBg="bg-[#EFEAFF]">
         <div className="flex items-center justify-between px-5 py-4">
-          <button onClick={() => navegarMes(-1)} className="rounded-xl border border-[#F0E6F6] px-3 py-1.5 text-sm font-bold text-[#9B5DE5] hover:bg-[#EEE4FF]">← Anterior</button>
+          <button onClick={() => navegarMes(-1)} className="inline-flex items-center gap-1 rounded-xl border border-[#F0E6F6] px-3 py-1.5 text-sm font-bold text-[#9B5DE5] hover:bg-[#EEE4FF]"><Icon name="chevronLeft" size={15} /> Anterior</button>
           <span className="text-[15px] font-extrabold text-[#2D1B4E]" style={{ fontFamily: '"Baloo 2", cursive' }}>{MESES[mes - 1]} {ano}</span>
-          <button onClick={() => navegarMes(1)} className="rounded-xl border border-[#F0E6F6] px-3 py-1.5 text-sm font-bold text-[#9B5DE5] hover:bg-[#EEE4FF]">Próximo →</button>
+          <button onClick={() => navegarMes(1)} className="inline-flex items-center gap-1 rounded-xl border border-[#F0E6F6] px-3 py-1.5 text-sm font-bold text-[#9B5DE5] hover:bg-[#EEE4FF]">Próximo <Icon name="chevronRight" size={15} /></button>
         </div>
       </CardShell>
 
@@ -311,7 +344,7 @@ export default function Reservas({ onNovaReserva, acaoCalendario }) {
           <SkeletonRows />
         ) : eventos.length === 0 ? (
           <div className="px-5 py-10 text-center">
-            <div className="text-4xl">📅</div>
+            <Icon name="calendar" size={36} className="mx-auto text-[#C4C0D8]" />
             <p className="mt-3 text-sm text-[#8B7BAD]">Nenhuma reserva em {MESES[mes - 1]}.</p>
             <button onClick={abrirNovo} className="mt-4 rounded-2xl bg-[#9B5DE5] px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-[#9B5DE5]/20 transition hover:bg-[#864fe1]">+ Criar primeira reserva</button>
           </div>
@@ -339,26 +372,26 @@ export default function Reservas({ onNovaReserva, acaoCalendario }) {
 
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        {evento.temaFesta && <span className="text-[15px] font-bold text-[#2D1B4E]">🎉 {evento.temaFesta}</span>}
+                        {evento.temaFesta && <span className="inline-flex items-center gap-1.5 text-[15px] font-bold text-[#2D1B4E]"><Icon name="sparkles" size={15} className="text-[#FB5E89]" /> {evento.temaFesta}</span>}
                         <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${status.className}`}>{status.label}</span>
-                        {restante > 0 && total > 0 && <span className="rounded-full bg-[#FFE8F1] px-2.5 py-0.5 text-[11px] font-bold text-[#C9365A]">⚠️ Pendente</span>}
-                        {total > 0 && restante === 0 && <span className="rounded-full bg-[#D7FBF3] px-2.5 py-0.5 text-[11px] font-bold text-[#0B7A5E]">✓ Quitado</span>}
+                        {restante > 0 && total > 0 && <span className="inline-flex items-center gap-1 rounded-full bg-[#FFE8F1] px-2.5 py-0.5 text-[11px] font-bold text-[#C9365A]"><Icon name="alert" size={12} /> Pendente</span>}
+                        {total > 0 && restante === 0 && <span className="inline-flex items-center gap-1 rounded-full bg-[#D7FBF3] px-2.5 py-0.5 text-[11px] font-bold text-[#0B7A5E]"><Icon name="check" size={12} /> Quitado</span>}
                       </div>
                       <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[12px] text-[#8B7BAD]">
                         {evento.cliente && (
-                          <span>
-                            👪 {evento.cliente.nome}
+                          <span className="inline-flex items-center gap-1">
+                            <Icon name="users" size={13} /> {evento.cliente.nome}
                             {evento.cliente.nomeFilho && (
-                              <span className="ml-1 font-semibold text-[#C9365A]">
-                                · 🎂 {evento.cliente.nomeFilho}{evento.cliente.idadeAniversariante ? ` (${evento.cliente.idadeAniversariante} anos)` : ''}
+                              <span className="ml-1 inline-flex items-center gap-1 font-semibold text-[#C9365A]">
+                                · <Icon name="cake" size={13} /> {evento.cliente.nomeFilho}{evento.cliente.idadeAniversariante ? ` (${evento.cliente.idadeAniversariante} anos)` : ''}
                               </span>
                             )}
                           </span>
                         )}
-                        {evento.numeroCriancas > 0 && <span>👦 {evento.numeroCriancas} crianças</span>}
-                        {evento.numeroPessoas  > 0 && <span>👥 {evento.numeroPessoas} pessoas</span>}
-                        {evento.buffet && <span>🍰 {evento.buffet}</span>}
-                        {evento.parcelas > 1 && <span>📅 {evento.parcelas}x</span>}
+                        {evento.numeroCriancas > 0 && <span className="inline-flex items-center gap-1"><Icon name="user" size={13} /> {evento.numeroCriancas} crianças</span>}
+                        {evento.numeroPessoas  > 0 && <span className="inline-flex items-center gap-1"><Icon name="users" size={13} /> {evento.numeroPessoas} pessoas</span>}
+                        {evento.buffet && <span className="inline-flex items-center gap-1"><Icon name="cake" size={13} /> {evento.buffet}</span>}
+                        {evento.parcelas > 1 && <span className="inline-flex items-center gap-1"><Icon name="calendar" size={13} /> {evento.parcelas}x</span>}
                       </div>
                       {total > 0 && (
                         <div className="mt-2.5">
@@ -394,7 +427,7 @@ export default function Reservas({ onNovaReserva, acaoCalendario }) {
         <Modal titulo={eventoSelecionado ? 'Editar Reserva' : 'Nova Reserva'} onClose={() => setModalAberto(false)} maxWidth="max-w-2xl">
           <div className="grid grid-cols-2 gap-x-4">
 
-            <Secao titulo="Dados da festa" icon="🎉" />
+            <Secao titulo="Dados da festa" icon={<Icon name="sparkles" size={14} className="text-[#FB5E89]" />} />
 
             <Campo label="Data" obrigatorio erro={erros.data}>
               <input className={inputClass(erros.data)} type="date" min={hoje()} value={form.data} onChange={(e) => setForm(f => ({ ...f, data: e.target.value }))} autoFocus />
@@ -417,7 +450,14 @@ export default function Reservas({ onNovaReserva, acaoCalendario }) {
             </Campo>
 
             <Campo label="Buffet">
-              <input className={inputClass()} value={form.buffet} onChange={(e) => setForm(f => ({ ...f, buffet: e.target.value }))} placeholder="Ex: Premium" />
+              <select className={inputClass()} value={form.buffetId} onChange={(e) => selecionarBuffet(e.target.value)}>
+                <option value="">— Nenhum —</option>
+                {buffets.filter(b => b.ativo || String(b.id) === String(form.buffetId)).map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.nome}{Number(b.preco) > 0 ? ` · ${fmt(b.preco)}` : ''}
+                  </option>
+                ))}
+              </select>
             </Campo>
             <Campo label="Status">
               <select className={inputClass()} value={form.status} onChange={(e) => setForm(f => ({ ...f, status: e.target.value }))}>
@@ -428,15 +468,36 @@ export default function Reservas({ onNovaReserva, acaoCalendario }) {
               </select>
             </Campo>
 
+            {form.buffetId && (
+              <div className="col-span-2 mb-4 rounded-2xl border border-[#EEE4FF] bg-[#FAFAFE] p-4">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-widest text-[#9B5DE5]">
+                    <Icon name="cake" size={13} /> Itens — {form.buffet || buffetSelecionado?.nome}
+                  </span>
+                  {buffetSelecionado && (
+                    <button type="button"
+                      onClick={() => setForm(f => ({ ...f, buffetItens: (buffetSelecionado.itens ?? []).map(it => ({ ...it })) }))}
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-[#9B5DE5] transition hover:text-[#7b3fe0]">
+                      <Icon name="refresh" size={13} /> Restaurar itens do modelo
+                    </button>
+                  )}
+                </div>
+                <p className="mb-3 text-[11px] text-[#8B7BAD]">
+                  Os itens vêm do cadastro do buffet, mas você pode ajustá-los para esta festa.
+                </p>
+                <ItensEditor itens={form.buffetItens} onChange={(itens) => setForm(f => ({ ...f, buffetItens: itens }))} />
+              </div>
+            )}
+
             {/* CLIENTE */}
-            <Secao titulo="Cliente" icon="👪" />
+            <Secao titulo="Cliente" icon={<Icon name="users" size={14} className="text-[#7B5CFA]" />} />
             <div className="col-span-2">
               <Campo label="Selecionar cliente">
                 <select className={inputClass()} value={form.clienteId} onChange={(e) => setForm(f => ({ ...f, clienteId: e.target.value }))}>
                   <option value="">— Nenhum selecionado —</option>
                   {clientes.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.nome}{c.nomeFilho ? ` · 🎂 ${c.nomeFilho}${c.idadeAniversariante ? ` (${c.idadeAniversariante} anos)` : ''}` : ''}{c.telefone ? ` (${c.telefone})` : ''}
+                      {c.nome}{c.nomeFilho ? ` · ${c.nomeFilho}${c.idadeAniversariante ? ` (${c.idadeAniversariante} anos)` : ''}` : ''}{c.telefone ? ` (${c.telefone})` : ''}
                     </option>
                   ))}
                 </select>
@@ -446,9 +507,9 @@ export default function Reservas({ onNovaReserva, acaoCalendario }) {
             {clienteSelecionado && (
               <div className="col-span-2 mb-4 rounded-2xl bg-[#EEE4FF] px-4 py-3 text-[12px] text-[#6B35C1]">
                 <strong>{clienteSelecionado.nome}</strong>
-                {clienteSelecionado.nomeFilho && <span> · 🎂 {clienteSelecionado.nomeFilho}{clienteSelecionado.idadeAniversariante ? ` (${clienteSelecionado.idadeAniversariante} anos)` : ''}</span>}
-                {clienteSelecionado.telefone  && <span> · 📞 {clienteSelecionado.telefone}</span>}
-                {clienteSelecionado.cidade    && <span> · 📍 {clienteSelecionado.cidade}</span>}
+                {clienteSelecionado.nomeFilho && <span className="ml-1 inline-flex items-center gap-1">· <Icon name="cake" size={12} /> {clienteSelecionado.nomeFilho}{clienteSelecionado.idadeAniversariante ? ` (${clienteSelecionado.idadeAniversariante} anos)` : ''}</span>}
+                {clienteSelecionado.telefone  && <span className="ml-1 inline-flex items-center gap-1">· <Icon name="phone" size={12} /> {clienteSelecionado.telefone}</span>}
+                {clienteSelecionado.cidade    && <span className="ml-1 inline-flex items-center gap-1">· <Icon name="mapPin" size={12} /> {clienteSelecionado.cidade}</span>}
               </div>
             )}
 
@@ -486,14 +547,14 @@ export default function Reservas({ onNovaReserva, acaoCalendario }) {
                   </Campo>
                 </div>
                 <button type="button" onClick={salvarNovoCliente} disabled={salvandoCliente}
-                  className="mt-2 w-full rounded-2xl bg-[#9B5DE5] py-2.5 text-sm font-bold text-white shadow-lg shadow-[#9B5DE5]/20 transition hover:bg-[#864fe1] disabled:opacity-50">
-                  {salvandoCliente ? 'Salvando...' : '✓ Salvar cliente e selecionar'}
+                  className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl bg-[#9B5DE5] py-2.5 text-sm font-bold text-white shadow-lg shadow-[#9B5DE5]/20 transition hover:bg-[#864fe1] disabled:opacity-50">
+                  {salvandoCliente ? 'Salvando...' : <><Icon name="check" size={15} /> Salvar cliente e selecionar</>}
                 </button>
               </div>
             )}
 
             {/* FINANCEIRO */}
-            <Secao titulo="Financeiro" icon="💰" />
+            <Secao titulo="Financeiro" icon={<Icon name="wallet" size={14} className="text-[#13B98A]" />} />
             <Campo label="Valor total (R$)">
               <input className={inputClass()} type="number" min="0" step="0.01" value={form.valorTotal} onChange={(e) => setForm(f => ({ ...f, valorTotal: e.target.value }))} placeholder="0,00" />
             </Campo>
@@ -507,7 +568,7 @@ export default function Reservas({ onNovaReserva, acaoCalendario }) {
               <div className="overflow-hidden rounded-2xl border border-[#F0E6F6]">
                 {[
                   { n: 1,  label: 'À vista' },
-                  ...[2,3,4,5,6,7,8,9,10,11,12].map(n => ({ n, label: `${n}x` }))
+                  ...[2,3,4,5,6,7,8,9,10].map(n => ({ n, label: `${n}x` }))
                 ].map(({ n, label }) => {
                   const total    = Number(form.valorTotal) || 0
                   const pago     = Number(form.valorPago)  || 0
@@ -524,7 +585,7 @@ export default function Reservas({ onNovaReserva, acaoCalendario }) {
                           {valorParc}/mês
                         </span>
                       )}
-                      {selecionado && <span className="ml-2 text-white">✓</span>}
+                      {selecionado && <Icon name="check" size={15} className="ml-2 text-white" />}
                     </button>
                   )
                 })}
@@ -541,8 +602,8 @@ export default function Reservas({ onNovaReserva, acaoCalendario }) {
           </div>
 
           {tentouSalvar && Object.keys(erros).length > 0 && (
-            <div className="mb-4 rounded-2xl bg-[#FFE8F1] px-4 py-3 text-[12px] font-semibold text-[#C9365A]">
-              ⚠️ {Object.values(erros)[0]}
+            <div className="mb-4 flex items-center gap-1.5 rounded-2xl bg-[#FFE8F1] px-4 py-3 text-[12px] font-semibold text-[#C9365A]">
+              <Icon name="alert" size={14} /> {Object.values(erros)[0]}
             </div>
           )}
 
@@ -563,7 +624,7 @@ export default function Reservas({ onNovaReserva, acaoCalendario }) {
             <strong className="text-[#2D1B4E]">{new Date(confirmandoDeletar.data + 'T12:00:00').toLocaleDateString('pt-BR')}</strong>
             {confirmandoDeletar.cliente && ` — ${confirmandoDeletar.cliente.nome}`}?
           </p>
-          <p className="mt-2 text-[12px] text-[#C9365A]">⚠️ Os lançamentos financeiros vinculados também serão removidos.</p>
+          <p className="mt-2 inline-flex items-center gap-1.5 text-[12px] text-[#C9365A]"><Icon name="alert" size={13} /> Os lançamentos financeiros vinculados também serão removidos.</p>
           <div className="mt-5 flex gap-3">
             <button onClick={() => setConfirmandoDeletar(null)} className="flex-1 rounded-2xl border border-[#F0E6F6] py-2.5 text-sm font-bold text-[#8B7BAD] transition hover:bg-[#FFF8FB]">Cancelar</button>
             <button onClick={() => deletar(confirmandoDeletar.id)} className="flex-2 rounded-2xl bg-[#EF476F] py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-[#d63860]">Sim, remover</button>

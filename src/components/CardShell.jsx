@@ -1,21 +1,19 @@
-export function CardShell({ title, icon, actionLabel, onAction, children, className = '' }) {
+export function CardShell({ title, icon, iconBg = 'bg-[#F1EFF8]', actionLabel, onAction, children, className = '' }) {
   return (
-    <section className={`overflow-hidden rounded-[28px] border border-[#F0E6F6] bg-white/95 shadow-[0_8px_30px_rgba(45,27,78,0.06)] ${className}`}>
-      <header className="flex items-center justify-between gap-4 border-b border-[#F0E6F6] px-5 py-4">
-        <div className="flex items-center gap-2">
-          <h2
-            className="text-[15px] font-bold text-[#2D1B4E]"
-            style={{ fontFamily: '"Baloo 2", cursive' }}
-          >
-            {icon ? `${icon} ${title}` : title}
-          </h2>
+    <section className={`overflow-hidden rounded-[20px] border border-[#ECE9F6] bg-white shadow-[0_1px_2px_rgba(44,39,82,0.04),0_14px_34px_-18px_rgba(44,39,82,0.14)] ${className}`}>
+      <header className="flex items-center justify-between gap-4 border-b border-[#F2F0FA] px-6 py-5">
+        <div className="flex items-center gap-2.5">
+          {icon ? (
+            <span className={`grid h-[30px] w-[30px] place-items-center rounded-[9px] text-[15px] ${iconBg}`}>{icon}</span>
+          ) : null}
+          <h2 className="text-[17px] font-bold text-[#2C2752]">{title}</h2>
         </div>
 
         {actionLabel ? (
           <button
             type="button"
             onClick={onAction}
-            className="text-sm font-bold text-[#9B5DE5] transition hover:text-[#7b3fe0]"
+            className="text-[14px] font-bold text-[#7B5CFA] transition hover:text-[#6344e8]"
           >
             {actionLabel}
           </button>

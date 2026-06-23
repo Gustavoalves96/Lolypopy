@@ -1,5 +1,6 @@
 import { SkeletonRows } from "../ui/Skeleton.jsx";
 import { Badge, StatusEstoque } from "./Badge.jsx";
+import { Icon } from "../ui/Icon.jsx";
 
 const GRID = "2fr 1fr 80px 80px 100px 120px";
 
@@ -157,9 +158,11 @@ export function ListaProdutos({
                   padding: "5px 10px",
                   fontSize: 13,
                   cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
                 }}
               >
-                📋
+                <Icon name="clipboard" size={16} />
               </button>
               <button
                 title="Excluir produto"
@@ -173,9 +176,11 @@ export function ListaProdutos({
                   fontSize: 13,
                   cursor: "pointer",
                   fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
                 }}
               >
-                🗑
+                <Icon name="trash" size={16} />
               </button>
             </div>
           </div>

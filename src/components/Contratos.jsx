@@ -4,6 +4,7 @@ import { CardShell } from './CardShell.jsx'
 import { Modal } from './ui/Modal.jsx'
 import { Campo } from './ui/Campo.jsx'
 import { inputClass } from './ui/inputClass.js'
+import { Icon } from './ui/Icon.jsx'
 import { SkeletonRows } from './ui/Skeleton.jsx'
 import { apiFetch } from '../api.js'
 
@@ -139,13 +140,13 @@ export default function Contratos({ onNovoContrato }) {
       {/* CARDS RESUMO */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[
-          { label: 'Total de contratos', valor: contratos.length, icon: '📄', cor: '#6366f1' },
-          { label: 'Assinados', valor: totalAssinados, icon: '✅', cor: '#059669' },
-          { label: 'Valor assinados', valor: `R$ ${valorAssinados.toFixed(2).replace('.', ',')}`, icon: '💰', cor: '#059669' },
-          { label: 'Valor pendente', valor: `R$ ${valorPendentes.toFixed(2).replace('.', ',')}`, icon: '⏳', cor: '#f59e0b' },
+          { label: 'Total de contratos', valor: contratos.length, icon: 'file', cor: '#6366f1' },
+          { label: 'Assinados', valor: totalAssinados, icon: 'checkCircle', cor: '#059669' },
+          { label: 'Valor assinados', valor: `R$ ${valorAssinados.toFixed(2).replace('.', ',')}`, icon: 'wallet', cor: '#059669' },
+          { label: 'Valor pendente', valor: `R$ ${valorPendentes.toFixed(2).replace('.', ',')}`, icon: 'clock', cor: '#f59e0b' },
         ].map(card => (
           <div key={card.label} className="flex items-center gap-3 rounded-[20px] border border-[#F0E6F6] bg-white p-4 shadow-sm">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-2xl" style={{ background: card.cor + '18' }}>{card.icon}</div>
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl" style={{ background: card.cor + '18' }}><Icon name={card.icon} size={22} style={{ color: card.cor }} /></div>
             <div>
               <div className="text-[20px] font-extrabold leading-tight" style={{ color: card.cor }}>{card.valor}</div>
               <div className="text-[11px] text-[#8B7BAD]">{card.label}</div>
@@ -155,12 +156,12 @@ export default function Contratos({ onNovoContrato }) {
       </div>
 
       {/* LISTA */}
-      <CardShell title="Contratos" icon="📄">
+      <CardShell title="Contratos" icon={<Icon name="file" size={16} className="text-[#7B5CFA]" />} iconBg="bg-[#EFEAFF]">
         {carregando ? (
           <SkeletonRows />
         ) : contratos.length === 0 ? (
           <div className="px-5 py-10 text-center">
-            <div className="text-4xl">📄</div>
+            <Icon name="file" size={36} className="mx-auto text-[#C4C0D8]" />
             <p className="mt-3 text-sm text-[#8B7BAD]">Nenhum contrato cadastrado ainda.</p>
             <button onClick={abrirNovo} className="mt-4 rounded-2xl bg-[#9B5DE5] px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-[#9B5DE5]/20 transition hover:bg-[#864fe1]">
               + Criar primeiro contrato
@@ -172,8 +173,8 @@ export default function Contratos({ onNovoContrato }) {
               const status = STATUS_CONFIG[contrato.status] ?? STATUS_CONFIG.pendente
               return (
                 <div key={contrato.id} className="flex items-center gap-4 px-5 py-4 transition hover:bg-[#FFF8FB]">
-                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl ${contrato.arquivoUrl ? 'bg-[#D7FBF3]' : 'bg-[#F0E6F6]'}`}>
-                    {contrato.arquivoUrl ? '📄' : '📝'}
+                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${contrato.arquivoUrl ? 'bg-[#D7FBF3]' : 'bg-[#F0E6F6]'}`}>
+                    <Icon name={contrato.arquivoUrl ? 'file' : 'edit'} size={20} className={contrato.arquivoUrl ? 'text-[#0B7A5E]' : 'text-[#8B7BAD]'} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -181,11 +182,11 @@ export default function Contratos({ onNovoContrato }) {
                       <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${status.className}`}>{status.label}</span>
                     </div>
                     <div className="mt-0.5 flex flex-wrap gap-x-4 text-[12px] text-[#8B7BAD]">
-                      <span>📅 {new Date(contrato.data + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
-                      <span>💰 R$ {Number(contrato.valor).toFixed(2).replace('.', ',')}</span>
+                      <span className="inline-flex items-center gap-1"><Icon name="calendar" size={13} /> {new Date(contrato.data + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                      <span className="inline-flex items-center gap-1"><Icon name="wallet" size={13} /> R$ {Number(contrato.valor).toFixed(2).replace('.', ',')}</span>
                       {contrato.arquivoUrl
-                        ? <a href={contrato.arquivoUrl} target="_blank" rel="noreferrer" className="font-semibold text-[#9B5DE5] hover:underline">📎 Ver PDF</a>
-                        : <span className="text-[#f59e0b]">⚠ Sem PDF</span>
+                        ? <a href={contrato.arquivoUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-semibold text-[#9B5DE5] hover:underline"><Icon name="paperclip" size={13} /> Ver PDF</a>
+                        : <span className="inline-flex items-center gap-1 text-[#f59e0b]"><Icon name="alert" size={13} /> Sem PDF</span>
                       }
                     </div>
                   </div>
@@ -215,7 +216,7 @@ export default function Contratos({ onNovoContrato }) {
                   {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
                 </select>
                 {!form.clienteId && (
-                  <p className="mt-1 text-[11px] text-[#f59e0b] font-semibold">⚠ Selecione um cliente para continuar</p>
+                  <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-[#f59e0b] font-semibold"><Icon name="alert" size={12} /> Selecione um cliente para continuar</p>
                 )}
               </Campo>
             </div>
@@ -245,7 +246,7 @@ export default function Contratos({ onNovoContrato }) {
                 {!arquivoSelecionado ? (
                   <div onClick={() => inputRef.current?.click()}
                     className="cursor-pointer rounded-2xl border-2 border-dashed border-[#D8C8F0] bg-[#FFF8FB] py-6 text-center transition hover:border-[#9B5DE5] hover:bg-[#F7EEF9]">
-                    <div className="text-3xl">📎</div>
+                    <Icon name="paperclip" size={30} className="mx-auto text-[#9B5DE5]" />
                     <div className="mt-2 text-sm font-semibold text-[#2D1B4E]">Clique para anexar o PDF</div>
                     <div className="mt-0.5 text-[11px] text-[#8B7BAD]">Apenas PDF · Máximo 10MB</div>
                     <input ref={inputRef} type="file" accept=".pdf" className="hidden"
@@ -253,13 +254,13 @@ export default function Contratos({ onNovoContrato }) {
                   </div>
                 ) : (
                   <div className="flex items-center gap-3 rounded-2xl border border-[#D7FBF3] bg-[#F0FDF9] px-4 py-3">
-                    <span className="text-2xl">📄</span>
+                    <Icon name="file" size={22} className="text-[#0B7A5E]" />
                     <div className="flex-1 min-w-0">
                       <div className="truncate text-sm font-bold text-[#2D1B4E]">{arquivoSelecionado.name}</div>
                       <div className="text-[11px] text-[#8B7BAD]">{(arquivoSelecionado.size / 1024).toFixed(0)} KB</div>
                     </div>
                     {!salvando && (
-                      <button onClick={() => setArquivoSelecionado(null)} className="text-lg text-[#8B7BAD] hover:text-[#C9365A]">×</button>
+                      <button onClick={() => setArquivoSelecionado(null)} className="grid place-items-center text-[#8B7BAD] hover:text-[#C9365A]"><Icon name="x" size={18} /></button>
                     )}
                   </div>
                 )}
@@ -269,8 +270,8 @@ export default function Contratos({ onNovoContrato }) {
                     <div className="h-1.5 overflow-hidden rounded-full bg-[#e5e7eb]">
                       <div className="h-full rounded-full bg-[#9B5DE5] transition-all duration-300" style={{ width: `${progresso}%` }} />
                     </div>
-                    <div className="mt-1 text-[11px] font-bold text-[#9B5DE5]">
-                      {progresso < 100 ? 'Enviando PDF...' : '✓ PDF enviado!'}
+                    <div className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-[#9B5DE5]">
+                      {progresso < 100 ? 'Enviando PDF...' : <><Icon name="check" size={12} /> PDF enviado!</>}
                     </div>
                   </div>
                 )}

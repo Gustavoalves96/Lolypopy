@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { CardShell } from './CardShell.jsx'
+import { Icon } from './ui/Icon.jsx'
 import { apiFetch } from '../api.js'
 
 const fmt = (v) =>
@@ -69,7 +70,7 @@ export default function PendenciasPage({ onVerFinanceiro }) {
   if (carregando) {
     return (
       <div className="mx-auto flex w-full max-w-300 flex-col gap-5">
-        <CardShell title="Pendências" icon="⚠️">
+        <CardShell title="Pendências" icon={<Icon name="alert" size={16} className="text-[#E8930C]" />} iconBg="bg-[#FFF3DC]">
           <div className="px-5 py-10 text-center text-sm text-[#8B7BAD]">
             Carregando pendências...
           </div>
@@ -105,18 +106,18 @@ export default function PendenciasPage({ onVerFinanceiro }) {
           <div className="flex items-center rounded-3xl bg-[#EEE4FF] p-5">
             <button
               onClick={onVerFinanceiro}
-              className="w-full rounded-2xl bg-[#9B5DE5] py-2.5 text-sm font-bold text-white shadow-lg shadow-[#9B5DE5]/20 transition hover:bg-[#864fe1]"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-2xl bg-[#9B5DE5] py-2.5 text-sm font-bold text-white shadow-lg shadow-[#9B5DE5]/20 transition hover:bg-[#864fe1]"
             >
-              Ver módulo financeiro →
+              Ver módulo financeiro <Icon name="arrowRight" size={15} />
             </button>
           </div>
         )}
       </div>
 
       {qtdTotal === 0 ? (
-        <CardShell title="Pendências" icon="⚠️">
+        <CardShell title="Pendências" icon={<Icon name="alert" size={16} className="text-[#E8930C]" />} iconBg="bg-[#FFF3DC]">
           <div className="px-5 py-14 text-center">
-            <div className="text-5xl">🎉</div>
+            <Icon name="checkCircle" size={44} className="mx-auto text-[#13B98A]" />
             <p className="mt-3 text-sm font-semibold text-[#0B7A5E]">
               Nenhuma pendência em aberto!
             </p>
@@ -129,7 +130,8 @@ export default function PendenciasPage({ onVerFinanceiro }) {
           {dados?.lancamentosAtrasados?.length > 0 && (
             <CardShell
               title={`${dados.lancamentosAtrasados.length} lançamento${dados.lancamentosAtrasados.length !== 1 ? 's' : ''} atrasado${dados.lancamentosAtrasados.length !== 1 ? 's' : ''}`}
-              icon="📋"
+              icon={<Icon name="clipboard" size={16} className="text-[#C9365A]" />}
+              iconBg="bg-[#FFE8F1]"
             >
               <div className="divide-y divide-[#F0E6F6]">
                 {dados.lancamentosAtrasados.map((l) => {
@@ -151,8 +153,8 @@ export default function PendenciasPage({ onVerFinanceiro }) {
                             Venceu:{' '}
                             {new Date(l.dataVencimento + 'T12:00:00').toLocaleDateString('pt-BR')}
                           </span>
-                          {l.cliente && <span>👪 {l.cliente.nome}</span>}
-                          {l.evento && <span>🎉 Evento {l.evento.data}</span>}
+                          {l.cliente && <span className="inline-flex items-center gap-1"><Icon name="users" size={13} /> {l.cliente.nome}</span>}
+                          {l.evento && <span className="inline-flex items-center gap-1"><Icon name="sparkles" size={13} /> Evento {l.evento.data}</span>}
                         </div>
                       </div>
                       <div className="flex shrink-0 flex-col items-end gap-2">
@@ -165,9 +167,9 @@ export default function PendenciasPage({ onVerFinanceiro }) {
                         <button
                           onClick={() => marcarPago(l.id)}
                           disabled={marcando === l.id}
-                          className="rounded-xl border border-[#D7FBF3] bg-white px-3 py-1 text-[11px] font-bold text-[#0B7A5E] transition hover:bg-[#D7FBF3] disabled:opacity-50"
+                          className="inline-flex items-center gap-1 rounded-xl border border-[#D7FBF3] bg-white px-3 py-1 text-[11px] font-bold text-[#0B7A5E] transition hover:bg-[#D7FBF3] disabled:opacity-50"
                         >
-                          {marcando === l.id ? '...' : '✓ Marcar pago'}
+                          {marcando === l.id ? '...' : <><Icon name="check" size={13} /> Marcar pago</>}
                         </button>
                       </div>
                     </div>
@@ -189,7 +191,8 @@ export default function PendenciasPage({ onVerFinanceiro }) {
           {dados?.eventosComDebt?.length > 0 && (
             <CardShell
               title={`${dados.eventosComDebt.length} evento${dados.eventosComDebt.length !== 1 ? 's' : ''} com saldo em aberto`}
-              icon="🎉"
+              icon={<Icon name="sparkles" size={16} className="text-[#FB5E89]" />}
+              iconBg="bg-[#FFEDF2]"
             >
               <div className="divide-y divide-[#F0E6F6]">
                 {dados.eventosComDebt.map((e) => {
@@ -206,8 +209,8 @@ export default function PendenciasPage({ onVerFinanceiro }) {
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-[14px] font-bold text-[#2D1B4E]">
-                            {e.temaFesta ? `🎉 ${e.temaFesta}` : `Evento ${e.data}`}
+                          <span className="inline-flex items-center gap-1.5 text-[14px] font-bold text-[#2D1B4E]">
+                            {e.temaFesta ? <><Icon name="sparkles" size={14} className="text-[#FB5E89]" /> {e.temaFesta}</> : `Evento ${e.data}`}
                           </span>
                           <BadgeAtrasado dias={dias} />
                         </div>
@@ -216,7 +219,7 @@ export default function PendenciasPage({ onVerFinanceiro }) {
                             Data:{' '}
                             {new Date(e.data + 'T12:00:00').toLocaleDateString('pt-BR')}
                           </span>
-                          {e.cliente && <span>👪 {e.cliente.nome}</span>}
+                          {e.cliente && <span className="inline-flex items-center gap-1"><Icon name="users" size={13} /> {e.cliente.nome}</span>}
                         </div>
 
                         {/* Barra de progresso */}

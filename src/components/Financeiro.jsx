@@ -4,6 +4,7 @@ import { CardShell } from './CardShell.jsx'
 import { Modal } from './ui/Modal.jsx'
 import { Campo } from './ui/Campo.jsx'
 import { inputClass } from './ui/inputClass.js'
+import { Icon } from './ui/Icon.jsx'
 import { SkeletonRows } from './ui/Skeleton.jsx'
 import { apiFetch } from '../api.js'
 
@@ -61,8 +62,8 @@ function KpiBox({ icon, label, value, sub, tone }) {
   const t = tones[tone] ?? tones.purple
   return (
     <div className={`flex flex-col gap-2 rounded-3xl ${t.bg} p-5`}>
-      <div className={`flex h-9 w-9 items-center justify-center rounded-2xl ${t.iconBg} text-lg`}>
-        {icon}
+      <div className={`flex h-9 w-9 items-center justify-center rounded-2xl ${t.iconBg} ${t.text}`}>
+        <Icon name={icon} size={18} />
       </div>
       <div className={`text-[22px] font-extrabold ${t.text}`} style={{ fontFamily: '"Baloo 2", cursive' }}>
         {value}
@@ -219,13 +220,13 @@ export default function Financeiro({ onNovoLancamento }) {
     <div className="mx-auto flex w-full max-w-300 flex-col gap-5">
 
       {/* NAVEGAÇÃO DE MÊS */}
-      <CardShell title="Financeiro" icon="💰">
+      <CardShell title="Financeiro" icon={<Icon name="wallet" size={16} className="text-[#13B98A]" />} iconBg="bg-[#E2F7F0]">
         <div className="flex items-center justify-between px-5 py-4">
           <button
             onClick={() => navegarMes(-1)}
-            className="rounded-xl border border-[#F0E6F6] px-3 py-1.5 text-sm font-bold text-[#9B5DE5] hover:bg-[#EEE4FF]"
+            className="inline-flex items-center gap-1 rounded-xl border border-[#F0E6F6] px-3 py-1.5 text-sm font-bold text-[#9B5DE5] hover:bg-[#EEE4FF]"
           >
-            ← Anterior
+            <Icon name="chevronLeft" size={15} /> Anterior
           </button>
           <span
             className="text-[15px] font-extrabold text-[#2D1B4E]"
@@ -235,9 +236,9 @@ export default function Financeiro({ onNovoLancamento }) {
           </span>
           <button
             onClick={() => navegarMes(1)}
-            className="rounded-xl border border-[#F0E6F6] px-3 py-1.5 text-sm font-bold text-[#9B5DE5] hover:bg-[#EEE4FF]"
+            className="inline-flex items-center gap-1 rounded-xl border border-[#F0E6F6] px-3 py-1.5 text-sm font-bold text-[#9B5DE5] hover:bg-[#EEE4FF]"
           >
-            Próximo →
+            Próximo <Icon name="chevronRight" size={15} />
           </button>
         </div>
       </CardShell>
@@ -245,10 +246,10 @@ export default function Financeiro({ onNovoLancamento }) {
       {/* KPIs DO MÊS */}
       {resumo && (
         <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-          <KpiBox icon="🎉" label="Festas confirmadas" value={resumo.festasDoMes} tone="purple" />
-          <KpiBox icon="💵" label="Receitas do mês" value={fmt(resumo.totalReceitas)} sub={`Pago: ${fmt(resumo.receitasPagas)}`} tone="green" />
-          <KpiBox icon="✅" label="Adimplência" value={`${resumo.taxaAdimplencia}%`} sub={`Pendente: ${fmt(resumo.receitasPendentes)}`} tone={resumo.taxaAdimplencia >= 80 ? 'green' : 'yellow'} />
-          <KpiBox icon="📤" label="Despesas do mês" value={fmt(resumo.totalDespesas)} sub={`Saldo: ${fmt(resumo.saldo)}`} tone={resumo.saldo >= 0 ? 'green' : 'pink'} />
+          <KpiBox icon="sparkles" label="Festas confirmadas" value={resumo.festasDoMes} tone="purple" />
+          <KpiBox icon="cash" label="Receitas do mês" value={fmt(resumo.totalReceitas)} sub={`Pago: ${fmt(resumo.receitasPagas)}`} tone="green" />
+          <KpiBox icon="checkCircle" label="Adimplência" value={`${resumo.taxaAdimplencia}%`} sub={`Pendente: ${fmt(resumo.receitasPendentes)}`} tone={resumo.taxaAdimplencia >= 80 ? 'green' : 'yellow'} />
+          <KpiBox icon="expense" label="Despesas do mês" value={fmt(resumo.totalDespesas)} sub={`Saldo: ${fmt(resumo.saldo)}`} tone={resumo.saldo >= 0 ? 'green' : 'pink'} />
         </div>
       )}
 
@@ -264,7 +265,10 @@ export default function Financeiro({ onNovoLancamento }) {
                 : 'border border-[#F0E6F6] text-[#8B7BAD] hover:bg-[#EEE4FF]'
             }`}
           >
-            {a === 'resumo' ? '📊 Resumo' : '📋 Lançamentos'}
+            <span className="inline-flex items-center gap-1.5">
+              <Icon name={a === 'resumo' ? 'chart' : 'clipboard'} size={14} />
+              {a === 'resumo' ? 'Resumo' : 'Lançamentos'}
+            </span>
           </button>
         ))}
         <button
@@ -277,12 +281,12 @@ export default function Financeiro({ onNovoLancamento }) {
 
       {/* ABA RESUMO */}
       {aba === 'resumo' && resumo && (
-        <CardShell title={`Resumo — ${MESES[mes - 1]} ${ano}`} icon="📊">
+        <CardShell title={`Resumo — ${MESES[mes - 1]} ${ano}`} icon={<Icon name="chart" size={16} className="text-[#7B5CFA]" />} iconBg="bg-[#EFEAFF]">
           <div className="divide-y divide-[#F0E6F6]">
             {[
               { label: 'Total de receitas', value: fmt(resumo.totalReceitas), color: 'text-[#0B7A5E]' },
-              { label: '↳ Receitas pagas', value: fmt(resumo.receitasPagas), color: 'text-[#0B7A5E]', sub: true },
-              { label: '↳ Receitas pendentes', value: fmt(resumo.receitasPendentes), color: 'text-[#A07800]', sub: true },
+              { label: 'Receitas pagas', value: fmt(resumo.receitasPagas), color: 'text-[#0B7A5E]', sub: true },
+              { label: 'Receitas pendentes', value: fmt(resumo.receitasPendentes), color: 'text-[#A07800]', sub: true },
               { label: 'Total de despesas', value: fmt(resumo.totalDespesas), color: 'text-[#C9365A]' },
               { label: 'Saldo do mês', value: fmt(resumo.saldo), color: resumo.saldo >= 0 ? 'text-[#0B7A5E]' : 'text-[#C9365A]' },
             ].map((row) => (
@@ -312,7 +316,12 @@ export default function Financeiro({ onNovoLancamento }) {
                     : 'border border-[#F0E6F6] text-[#8B7BAD] hover:bg-[#F0E6F6]'
                 }`}
               >
-                {t === 'todos' ? 'Todos' : t === 'receita' ? '💚 Receitas' : '🔴 Despesas'}
+                {t === 'todos' ? 'Todos' : (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Icon name={t === 'receita' ? 'income' : 'expense'} size={13} />
+                    {t === 'receita' ? 'Receitas' : 'Despesas'}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -324,7 +333,7 @@ export default function Financeiro({ onNovoLancamento }) {
               <SkeletonRows />
             ) : lancamentosFiltrados.length === 0 ? (
               <div className="px-5 py-10 text-center">
-                <div className="text-4xl">💰</div>
+                <Icon name="wallet" size={36} className="mx-auto text-[#C4C0D8]" />
                 <p className="mt-3 text-sm text-[#8B7BAD]">Nenhum lançamento em {MESES[mes - 1]}.</p>
                 <button
                   onClick={abrirNovo}
@@ -365,18 +374,18 @@ export default function Financeiro({ onNovoLancamento }) {
                             {status.label}
                           </span>
                           {atrasado && (
-                            <span className="rounded-full bg-[#FFE8F1] px-2 py-0.5 text-[10px] font-bold text-[#C9365A]">
-                              ⚠️ Atrasado
+                            <span className="inline-flex items-center gap-1 rounded-full bg-[#FFE8F1] px-2 py-0.5 text-[10px] font-bold text-[#C9365A]">
+                              <Icon name="alert" size={11} /> Atrasado
                             </span>
                           )}
                         </div>
 
                         <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[12px] text-[#8B7BAD]">
                           <span>Vence: {vencimento.toLocaleDateString('pt-BR')}</span>
-                          {l.cliente && <span>👪 {l.cliente.nome}</span>}
-                          {l.evento && <span>🎉 Evento #{l.evento.id}</span>}
+                          {l.cliente && <span className="inline-flex items-center gap-1"><Icon name="users" size={13} /> {l.cliente.nome}</span>}
+                          {l.evento && <span className="inline-flex items-center gap-1"><Icon name="sparkles" size={13} /> Evento #{l.evento.id}</span>}
                           {l.categoria !== 'outro' && (
-                            <span>📁 {l.descricao?.match(/Parcela \d+\/\d+/) ? l.descricao.match(/Parcela \d+\/\d+/)[0] : CATEGORIA_LABELS[l.categoria]}</span>
+                            <span className="inline-flex items-center gap-1"><Icon name="folder" size={13} /> {l.descricao?.match(/Parcela \d+\/\d+/) ? l.descricao.match(/Parcela \d+\/\d+/)[0] : CATEGORIA_LABELS[l.categoria]}</span>
                           )}
                         </div>
                       </div>
@@ -396,7 +405,7 @@ export default function Financeiro({ onNovoLancamento }) {
                               className="rounded-xl border border-[#D7FBF3] bg-white px-2.5 py-1 text-[11px] font-bold text-[#0B7A5E] transition hover:bg-[#D7FBF3]"
                               title={l.categoria === 'parcela' ? 'Marcar apenas esta parcela como paga' : 'Marcar como pago'}
                             >
-                              {l.categoria === 'parcela' ? '✓ Parcela paga' : '✓ Pago'}
+                              <span className="inline-flex items-center gap-1"><Icon name="check" size={12} /> {l.categoria === 'parcela' ? 'Parcela paga' : 'Pago'}</span>
                             </button>
                           )}
                           <button
@@ -407,9 +416,9 @@ export default function Financeiro({ onNovoLancamento }) {
                           </button>
                           <button
                             onClick={() => setConfirmandoDeletar(l)}
-                            className="rounded-xl border border-[#FFE8F1] bg-white px-2.5 py-1 text-[11px] font-bold text-[#C9365A] transition hover:bg-[#FFE8F1]"
+                            className="grid place-items-center rounded-xl border border-[#FFE8F1] bg-white px-2.5 py-1 text-[#C9365A] transition hover:bg-[#FFE8F1]"
                           >
-                            ✕
+                            <Icon name="x" size={14} />
                           </button>
                         </div>
                       </div>
@@ -435,8 +444,8 @@ export default function Financeiro({ onNovoLancamento }) {
                 value={form.tipo}
                 onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value }))}
               >
-                <option value="receita">💚 Receita</option>
-                <option value="despesa">🔴 Despesa</option>
+                <option value="receita">Receita</option>
+                <option value="despesa">Despesa</option>
               </select>
             </Campo>
 

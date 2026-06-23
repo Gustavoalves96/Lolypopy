@@ -5,6 +5,7 @@ import {
   PieChart, Pie, Cell,
 } from 'recharts'
 import { CardShell } from './CardShell.jsx'
+import { Icon } from './ui/Icon.jsx'
 import { apiFetch } from '../api.js'
 
 const MESES_LABEL = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
@@ -50,7 +51,7 @@ function KpiBox({ icon, label, value, tone }) {
   const t = tones[tone] ?? tones.purple
   return (
     <div className={`flex flex-col gap-3 rounded-3xl ${t.bg} p-4`}>
-      <div className={`grid h-9 w-9 place-items-center rounded-xl text-lg ${t.iconBg}`}>{icon}</div>
+      <div className={`grid h-9 w-9 place-items-center rounded-xl ${t.iconBg}`}><Icon name={icon} size={18} /></div>
       <div
         className={`text-[22px] font-extrabold leading-none ${t.text}`}
         style={{ fontFamily: '"Baloo 2", cursive' }}
@@ -164,11 +165,11 @@ export default function Relatorios() {
         </div>
       ) : resumo ? (
         <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          <KpiBox icon="🎉" label="Festas confirmadas" value={String(resumo.festasDoMes)}   tone="purple" />
-          <KpiBox icon="💵" label="Receita total"      value={fmt(resumo.totalReceitas)}     tone="green"  />
-          <KpiBox icon="📤" label="Despesas"           value={fmt(resumo.totalDespesas)}     tone="pink"   />
-          <KpiBox icon="💰" label="Saldo"              value={fmt(resumo.saldo)}             tone={resumo.saldo >= 0 ? 'teal' : 'pink'} />
-          <KpiBox icon="✅" label="Adimplência"        value={`${resumo.taxaAdimplencia}%`} tone="yellow" />
+          <KpiBox icon="sparkles"    label="Festas confirmadas" value={String(resumo.festasDoMes)}   tone="purple" />
+          <KpiBox icon="cash"        label="Receita total"      value={fmt(resumo.totalReceitas)}     tone="green"  />
+          <KpiBox icon="expense"     label="Despesas"           value={fmt(resumo.totalDespesas)}     tone="pink"   />
+          <KpiBox icon="wallet"      label="Saldo"              value={fmt(resumo.saldo)}             tone={resumo.saldo >= 0 ? 'teal' : 'pink'} />
+          <KpiBox icon="checkCircle" label="Adimplência"        value={`${resumo.taxaAdimplencia}%`} tone="yellow" />
         </div>
       ) : null}
 
@@ -176,7 +177,7 @@ export default function Relatorios() {
       <div className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
 
         {/* Barras — últimos 6 meses */}
-        <CardShell title="Receitas × Despesas" icon="📊">
+        <CardShell title="Receitas × Despesas" icon={<Icon name="chart" size={16} className="text-[#7B5CFA]" />} iconBg="bg-[#EFEAFF]">
           <div className="px-5 py-5">
             {loading ? (
               <Skeleton className="h-56" />
@@ -218,7 +219,7 @@ export default function Relatorios() {
         </CardShell>
 
         {/* Rosca — adimplência */}
-        <CardShell title="Adimplência do Mês" icon="✅">
+        <CardShell title="Adimplência do Mês" icon={<Icon name="checkCircle" size={16} className="text-[#13B98A]" />} iconBg="bg-[#E2F7F0]">
           <div className="flex flex-col items-center px-5 py-5">
             {loading ? (
               <Skeleton className="h-56 w-full" />
@@ -273,7 +274,7 @@ export default function Relatorios() {
               </>
             ) : (
               <div className="flex h-56 flex-col items-center justify-center gap-2 text-[#8B7BAD]">
-                <span className="text-3xl">📭</span>
+                <Icon name="inbox" size={32} className="text-[#C4C0D8]" />
                 <p className="text-sm font-semibold">Sem receitas neste mês</p>
               </div>
             )}

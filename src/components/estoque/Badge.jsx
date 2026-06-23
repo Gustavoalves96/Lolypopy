@@ -1,4 +1,5 @@
 import { getCor, getLabel } from "./constants.js";
+import { Icon } from "../ui/Icon.jsx";
 
 export function Badge({ cat }) {
   const cor = getCor(cat);
@@ -51,10 +52,14 @@ export function StatusEstoque({ atual, minimo }) {
           marginTop: 3,
           color: cor,
           fontWeight: 600,
-          textAlign: "center",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 3,
         }}
       >
-        {critico ? "⚠ Crítico" : baixo ? "↓ Baixo" : "✓ OK"}
+        <Icon name={critico ? "alert" : baixo ? "arrowDown" : "check"} size={12} />
+        {critico ? "Crítico" : baixo ? "Baixo" : "OK"}
       </div>
     </div>
   );

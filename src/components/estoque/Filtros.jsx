@@ -1,4 +1,5 @@
 import { CATEGORIAS, inputStyle } from "./constants.js";
+import { Icon } from "../ui/Icon.jsx";
 
 export function Filtros({
   filtroBusca,
@@ -20,17 +21,27 @@ export function Filtros({
         alignItems: "center",
       }}
     >
-      <input
-        placeholder="🔍 Buscar produto..."
-        value={filtroBusca}
-        onChange={(e) => setFiltroBusca(e.target.value)}
+      <div
         style={{
-          ...inputStyle,
-          width: "auto",
+          position: "relative",
           flex: "1 1 180px",
           minWidth: 160,
+          display: "flex",
+          alignItems: "center",
         }}
-      />
+      >
+        <Icon
+          name="search"
+          size={16}
+          style={{ position: "absolute", left: 12, color: "#9ca3af", pointerEvents: "none" }}
+        />
+        <input
+          placeholder="Buscar produto..."
+          value={filtroBusca}
+          onChange={(e) => setFiltroBusca(e.target.value)}
+          style={{ ...inputStyle, width: "100%", paddingLeft: 34 }}
+        />
+      </div>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         <button
           onClick={() => setFiltroCategoria("todas")}

@@ -4,78 +4,51 @@ import { CardShell } from './CardShell.jsx'
 import { Modal } from './ui/Modal.jsx'
 import { Campo } from './ui/Campo.jsx'
 import { inputClass } from './ui/inputClass.js'
+import { ItensEditor } from './ui/ItensEditor.jsx'
+import { Icon } from './ui/Icon.jsx'
+import { SkeletonRows } from './ui/Skeleton.jsx'
+import { apiFetch } from '../api.js'
 
-const STORAGE_KEY = 'lolypopy:buffets'
-
-const DEFAULTS = [
-  {
-    id: 1,
-    nome: 'Kids',
-    descricao: 'Pacote básico para festas infantis',
-    preco: 1800,
-    itens: 'Salgados variados, refrigerante, suco, bolo de aniversário',
-    ativo: true,
-  },
-  {
-    id: 2,
-    nome: 'Standard',
-    descricao: 'Pacote intermediário com mais variedade',
-    preco: 2800,
-    itens: 'Salgados premium, refrigerante, suco, água, bolo decorado, mesa de doces',
-    ativo: true,
-  },
-  {
-    id: 3,
-    nome: 'Premium',
-    descricao: 'Pacote completo para festas especiais',
-    preco: 4200,
-    itens: 'Salgados gourmet, open bar, bolo temático, mesa de doces completa, brigadeiros personalizados',
-    ativo: true,
-  },
-]
-
-function carregarBuffets() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : DEFAULTS
-  } catch {
-    return DEFAULTS
-  }
-}
-
-function salvarBuffets(lista) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(lista))
-}
-
-function nextId(lista) {
-  return lista.length === 0 ? 1 : Math.max(...lista.map((b) => b.id)) + 1
-}
-
-const FORM_VAZIO = { nome: '', descricao: '', preco: '', itens: '', ativo: true }
+const FORM_VAZIO = { nome: '', descricao: '', preco: '', itens: [], ativo: true }
 
 function validar(form) {
   const erros = {}
   if (!form.nome.trim()) erros.nome = 'Nome é obrigatório'
-  if (!form.preco || Number(form.preco) <= 0) erros.preco = 'Informe um valor válido'
+  if (form.preco === '' || Number(form.preco) < 0) erros.preco = 'Informe um valor válido'
   return erros
 }
 
 const fmt = (v) => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
+// Remove itens vazios (sem nome) antes de enviar/salvar.
+const limparItens = (itens) =>
+  (itens ?? [])
+    .map((it) => ({ nome: it.nome.trim(), quantidade: (it.quantidade ?? '').trim() }))
+    .filter((it) => it.nome)
+
 export default function Buffets({ onNovoBuffet }) {
-  const [buffets, setBuffets] = useState(carregarBuffets)
+  const [buffets, setBuffets] = useState([])
+  const [carregando, setCarregando] = useState(true)
   const [modalAberto, setModalAberto] = useState(false)
   const [buffetSelecionado, setBuffetSelecionado] = useState(null)
   const [form, setForm] = useState(FORM_VAZIO)
   const [erros, setErros] = useState({})
   const [tentouSalvar, setTentouSalvar] = useState(false)
+  const [salvando, setSalvando] = useState(false)
   const [confirmandoDeletar, setConfirmandoDeletar] = useState(null)
 
-  useEffect(() => { if (onNovoBuffet) abrirNovo() }, [onNovoBuffet])
+  async function carregar() {
+    try {
+      setCarregando(true)
+      const res = await apiFetch('/buffets')
+      setBuffets(res.ok ? await res.json() : [])
+    } catch { setBuffets([]) }
+    finally  { setCarregando(false) }
+  }
 
-  useEffect(() => {
-    if (tentouSalvar) setErros(validar(form))
-  }, [form, tentouSalvar])
+  useEffect(() => { carregar() }, [])
+  useEffect(() => { if (onNovoBuffet) abrirNovo() }, [onNovoBuffet])
+  useEffect(() => { if (tentouSalvar) setErros(validar(form)) }, [form, tentouSalvar])
 
   function abrirNovo() {
     setBuffetSelecionado(null)
@@ -89,9 +62,9 @@ export default function Buffets({ onNovoBuffet }) {
     setBuffetSelecionado(buffet)
     setForm({
       nome: buffet.nome,
-      descricao: buffet.descricao,
-      preco: String(buffet.preco),
-      itens: buffet.itens,
+      descricao: buffet.descricao ?? '',
+      preco: String(buffet.preco ?? ''),
+      itens: buffet.itens ?? [],
       ativo: buffet.ativo,
     })
     setErros({})
@@ -99,41 +72,56 @@ export default function Buffets({ onNovoBuffet }) {
     setModalAberto(true)
   }
 
-  function salvar() {
+  async function salvar() {
     setTentouSalvar(true)
     const e = validar(form)
     setErros(e)
     if (Object.keys(e).length > 0) return
 
-    let nova
-    if (buffetSelecionado) {
-      nova = buffets.map((b) =>
-        b.id === buffetSelecionado.id
-          ? { ...b, ...form, preco: Number(form.preco) }
-          : b
-      )
-      toast.success('Buffet atualizado!')
-    } else {
-      nova = [...buffets, { ...form, preco: Number(form.preco), id: nextId(buffets) }]
-      toast.success('Buffet cadastrado!')
-    }
-    salvarBuffets(nova)
-    setBuffets(nova)
-    setModalAberto(false)
+    setSalvando(true)
+    try {
+      const payload = {
+        nome: form.nome.trim(),
+        descricao: form.descricao.trim(),
+        preco: Number(form.preco) || 0,
+        itens: limparItens(form.itens),
+        ativo: form.ativo,
+      }
+      const url    = buffetSelecionado ? `/buffets/${buffetSelecionado.id}` : '/buffets'
+      const method = buffetSelecionado ? 'PATCH' : 'POST'
+      const res = await apiFetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) throw new Error()
+      await carregar()
+      setModalAberto(false)
+      toast.success(buffetSelecionado ? 'Buffet atualizado!' : 'Buffet cadastrado!')
+    } catch { toast.error('Erro ao salvar buffet.') }
+    finally  { setSalvando(false) }
   }
 
-  function deletar(id) {
-    const nova = buffets.filter((b) => b.id !== id)
-    salvarBuffets(nova)
-    setBuffets(nova)
-    setConfirmandoDeletar(null)
-    toast.success('Buffet removido.')
+  async function deletar(id) {
+    try {
+      const res = await apiFetch(`/buffets/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      await carregar()
+      setConfirmandoDeletar(null)
+      toast.success('Buffet removido.')
+    } catch { toast.error('Erro ao remover buffet.') }
   }
 
-  function toggleAtivo(id) {
-    const nova = buffets.map((b) => (b.id === id ? { ...b, ativo: !b.ativo } : b))
-    salvarBuffets(nova)
-    setBuffets(nova)
+  async function toggleAtivo(buffet) {
+    try {
+      const res = await apiFetch(`/buffets/${buffet.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ativo: !buffet.ativo }),
+      })
+      if (!res.ok) throw new Error()
+      await carregar()
+    } catch { toast.error('Erro ao atualizar disponibilidade.') }
   }
 
   const ativos = buffets.filter((b) => b.ativo).length
@@ -144,13 +132,13 @@ export default function Buffets({ onNovoBuffet }) {
       {/* RESUMO */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         {[
-          { label: 'Pacotes cadastrados', valor: buffets.length, icon: '🍰', cor: '#9B5DE5' },
-          { label: 'Disponíveis',         valor: ativos,          icon: '✅', cor: '#059669' },
-          { label: 'Indisponíveis',       valor: buffets.length - ativos, icon: '⏸', cor: '#f59e0b' },
+          { label: 'Pacotes cadastrados', valor: buffets.length, icon: 'cake', cor: '#9B5DE5' },
+          { label: 'Disponíveis',         valor: ativos,          icon: 'checkCircle', cor: '#059669' },
+          { label: 'Indisponíveis',       valor: buffets.length - ativos, icon: 'pause', cor: '#f59e0b' },
         ].map((card) => (
           <div key={card.label} className="flex items-center gap-3 rounded-[20px] border border-[#F0E6F6] bg-white p-4 shadow-sm">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-2xl" style={{ background: card.cor + '18' }}>
-              {card.icon}
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl" style={{ background: card.cor + '18' }}>
+              <Icon name={card.icon} size={22} style={{ color: card.cor }} />
             </div>
             <div>
               <div className="text-[22px] font-extrabold leading-tight" style={{ color: card.cor }}>{card.valor}</div>
@@ -161,10 +149,12 @@ export default function Buffets({ onNovoBuffet }) {
       </div>
 
       {/* LISTA */}
-      <CardShell title="Pacotes de Buffet" icon="🍰">
-        {buffets.length === 0 ? (
+      <CardShell title="Pacotes de Buffet" icon={<Icon name="cake" size={16} className="text-[#7B5CFA]" />} iconBg="bg-[#EFEAFF]">
+        {carregando ? (
+          <SkeletonRows />
+        ) : buffets.length === 0 ? (
           <div className="px-5 py-10 text-center">
-            <div className="text-4xl">🍰</div>
+            <Icon name="cake" size={36} className="mx-auto text-[#C4C0D8]" />
             <p className="mt-3 text-sm text-[#8B7BAD]">Nenhum pacote cadastrado ainda.</p>
             <button onClick={abrirNovo} className="mt-4 rounded-2xl bg-[#9B5DE5] px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-[#9B5DE5]/20 transition hover:bg-[#864fe1]">
               + Cadastrar primeiro pacote
@@ -174,8 +164,8 @@ export default function Buffets({ onNovoBuffet }) {
           <div className="divide-y divide-[#F0E6F6]">
             {buffets.map((buffet) => (
               <div key={buffet.id} className="flex items-start gap-4 px-5 py-4 transition hover:bg-[#FFF8FB]">
-                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl ${buffet.ativo ? 'bg-[#EEE4FF]' : 'bg-[#F0E6F6]'}`}>
-                  🍰
+                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${buffet.ativo ? 'bg-[#EEE4FF]' : 'bg-[#F0E6F6]'}`}>
+                  <Icon name="cake" size={20} className={buffet.ativo ? 'text-[#9B5DE5]' : 'text-[#8B7BAD]'} />
                 </div>
 
                 <div className="min-w-0 flex-1">
@@ -191,11 +181,11 @@ export default function Buffets({ onNovoBuffet }) {
                     <p className="mt-0.5 text-[12px] text-[#8B7BAD]">{buffet.descricao}</p>
                   )}
 
-                  {buffet.itens && (
+                  {buffet.itens?.length > 0 && (
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
-                      {buffet.itens.split(',').map((item) => (
-                        <span key={item.trim()} className="rounded-lg bg-[#F0E6F6] px-2 py-0.5 text-[11px] font-semibold text-[#6B35C1]">
-                          {item.trim()}
+                      {buffet.itens.map((item, i) => (
+                        <span key={i} className="rounded-lg bg-[#F0E6F6] px-2 py-0.5 text-[11px] font-semibold text-[#6B35C1]">
+                          {item.nome}{item.quantidade ? ` · ${item.quantidade}` : ''}
                         </span>
                       ))}
                     </div>
@@ -206,7 +196,7 @@ export default function Buffets({ onNovoBuffet }) {
                   <button onClick={() => abrirEditar(buffet)} className="rounded-xl border border-[#F0E6F6] bg-white px-3 py-1.5 text-xs font-bold text-[#9B5DE5] transition hover:bg-[#EEE4FF]">
                     Editar
                   </button>
-                  <button onClick={() => toggleAtivo(buffet.id)} className={`rounded-xl border px-3 py-1.5 text-xs font-bold transition ${buffet.ativo ? 'border-[#FFF5D6] bg-white text-[#A07800] hover:bg-[#FFF5D6]' : 'border-[#D7FBF3] bg-white text-[#0B7A5E] hover:bg-[#D7FBF3]'}`}>
+                  <button onClick={() => toggleAtivo(buffet)} className={`rounded-xl border px-3 py-1.5 text-xs font-bold transition ${buffet.ativo ? 'border-[#FFF5D6] bg-white text-[#A07800] hover:bg-[#FFF5D6]' : 'border-[#D7FBF3] bg-white text-[#0B7A5E] hover:bg-[#D7FBF3]'}`}>
                     {buffet.ativo ? 'Pausar' : 'Ativar'}
                   </button>
                   <button onClick={() => setConfirmandoDeletar(buffet)} className="rounded-xl border border-[#FFE8F1] bg-white px-3 py-1.5 text-xs font-bold text-[#C9365A] transition hover:bg-[#FFE8F1]">
@@ -227,7 +217,7 @@ export default function Buffets({ onNovoBuffet }) {
               className={inputClass(erros.nome)}
               value={form.nome}
               onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
-              placeholder="Ex: Premium, Kids, Standard"
+              placeholder="Ex: Buffet 1, Buffet 2"
               autoFocus
             />
           </Campo>
@@ -253,14 +243,8 @@ export default function Buffets({ onNovoBuffet }) {
             />
           </Campo>
 
-          <Campo label="Itens inclusos (separados por vírgula)">
-            <textarea
-              className={`${inputClass()} resize-none`}
-              rows={3}
-              value={form.itens}
-              onChange={(e) => setForm((f) => ({ ...f, itens: e.target.value }))}
-              placeholder="Salgados, refrigerante, bolo de aniversário, ..."
-            />
+          <Campo label="Itens inclusos">
+            <ItensEditor itens={form.itens} onChange={(itens) => setForm((f) => ({ ...f, itens }))} />
           </Campo>
 
           <Campo label="Disponibilidade">
@@ -279,8 +263,8 @@ export default function Buffets({ onNovoBuffet }) {
             <button onClick={() => setModalAberto(false)} className="flex-1 rounded-2xl border border-[#F0E6F6] py-2.5 text-sm font-bold text-[#8B7BAD] transition hover:bg-[#FFF8FB]">
               Cancelar
             </button>
-            <button onClick={salvar} className="flex-2 rounded-2xl bg-[#9B5DE5] py-2.5 text-sm font-bold text-white shadow-lg shadow-[#9B5DE5]/20 transition hover:bg-[#864fe1]">
-              {buffetSelecionado ? 'Salvar alterações' : 'Cadastrar pacote'}
+            <button onClick={salvar} disabled={salvando} className="flex-2 rounded-2xl bg-[#9B5DE5] py-2.5 text-sm font-bold text-white shadow-lg shadow-[#9B5DE5]/20 transition hover:bg-[#864fe1] disabled:opacity-50">
+              {salvando ? 'Salvando...' : buffetSelecionado ? 'Salvar alterações' : 'Cadastrar pacote'}
             </button>
           </div>
         </Modal>

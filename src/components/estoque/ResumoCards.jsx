@@ -1,16 +1,18 @@
+import { Icon } from "../ui/Icon.jsx";
+
 export function ResumoCards({ totalItens, totalAlertas, valorTotal }) {
   const cards = [
-    { label: "Produtos cadastrados", valor: totalItens, icon: "📦", cor: "#6366f1" },
+    { label: "Produtos cadastrados", valor: totalItens, icon: "box", cor: "#6366f1" },
     {
       label: "Alertas de estoque",
       valor: totalAlertas,
-      icon: "⚠️",
+      icon: "alert",
       cor: totalAlertas > 0 ? "#ef4444" : "#22c55e",
     },
     {
       label: "Valor em estoque",
       valor: `R$ ${valorTotal.toFixed(2).replace(".", ",")}`,
-      icon: "💰",
+      icon: "wallet",
       cor: "#059669",
     },
   ];
@@ -46,11 +48,10 @@ export function ResumoCards({ totalItens, totalAlertas, valorTotal }) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 22,
               flexShrink: 0,
             }}
           >
-            {card.icon}
+            <Icon name={card.icon} size={22} style={{ color: card.cor }} />
           </div>
           <div>
             <div style={{ fontSize: 22, fontWeight: 800, color: card.cor }}>

@@ -1,3 +1,5 @@
+import { Icon } from "../ui/Icon.jsx";
+
 export function EstoqueHeader({ modoDemo, onNovoProduto }) {
   return (
     <div
@@ -27,7 +29,7 @@ export function EstoqueHeader({ modoDemo, onNovoProduto }) {
             fontSize: 18,
           }}
         >
-          📦
+          <Icon name="box" size={20} style={{ color: "#fff" }} />
         </div>
         <div>
           <div style={{ fontWeight: 700, fontSize: 16 }}>Estoque</div>
@@ -44,9 +46,12 @@ export function EstoqueHeader({ modoDemo, onNovoProduto }) {
             padding: "4px 12px",
             borderRadius: 99,
             border: "1px solid #fcd34d",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
           }}
         >
-          🔌 Modo demonstração — conecte a API
+          <Icon name="plug" size={14} /> Modo demonstração — conecte a API
         </span>
       )}
       <button
