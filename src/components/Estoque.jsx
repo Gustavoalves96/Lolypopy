@@ -6,7 +6,6 @@ import {
   FORM_MOV_VAZIO,
   PRODUTOS_DEMO,
 } from "./estoque/constants.js";
-import { EstoqueHeader } from "./estoque/EstoqueHeader.jsx";
 import { ResumoCards } from "./estoque/ResumoCards.jsx";
 import { Filtros } from "./estoque/Filtros.jsx";
 import { ListaProdutos } from "./estoque/ListaProdutos.jsx";
@@ -198,11 +197,6 @@ export default function Estoque({ openNewProductKey = 0 }) {
     }
   }
 
-  function abrirNovoProduto() {
-    setFormProduto(FORM_PRODUTO_VAZIO);
-    setModalNovo(true);
-  }
-
   function abrirMovimentacao(produto) {
     setFormMov(FORM_MOV_VAZIO);
     setModalMovimentacao(produto);
@@ -216,17 +210,25 @@ export default function Estoque({ openNewProductKey = 0 }) {
   );
 
   return (
-    <div
-      style={{
-        fontFamily: "'Segoe UI', system-ui, sans-serif",
-        minHeight: "100vh",
-        background: "#f8fafc",
-        color: "#111827",
-      }}
-    >
-      <EstoqueHeader modoDemo={modoDemo} onNovoProduto={abrirNovoProduto} />
-
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 16px" }}>
+    <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", color: "#111827" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        {modoDemo && (
+          <div
+            style={{
+              background: "#fef3c7",
+              color: "#92400e",
+              fontSize: 12,
+              fontWeight: 600,
+              padding: "6px 12px",
+              borderRadius: 99,
+              border: "1px solid #fcd34d",
+              display: "inline-block",
+              marginBottom: 16,
+            }}
+          >
+            🔌 Modo demonstração — conecte a API
+          </div>
+        )}
         <ResumoCards
           totalItens={totalItens}
           totalAlertas={totalAlertas}

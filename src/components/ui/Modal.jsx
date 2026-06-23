@@ -9,7 +9,7 @@ export function Modal({ titulo, onClose, children, maxWidth = 'max-w-lg' }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-1000 flex items-center justify-center bg-black/40 p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className={`w-full ${maxWidth} overflow-hidden rounded-[28px] bg-white shadow-[0_20px_60px_rgba(45,27,78,0.18)]`}>
